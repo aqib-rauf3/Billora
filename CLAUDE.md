@@ -540,3 +540,28 @@ Consistency maintain karo.
 Billora ko ek premium SaaS brand ki tarah build karo.
 
 Kabhi bhi generic website mat banao.
+
+# PROJECT PRIORITIES
+
+Always prioritize work in this order:
+
+1. Stability
+2. Performance
+3. Accessibility
+4. Responsive Design
+5. UI Quality
+6. Motion
+7. New Features
+
+Never sacrifice performance for visual effects.
+
+# DESIGN DECISION RULE
+
+Before creating any new component:
+
+- Check if a similar component already exists.
+- Reuse existing components whenever possible.
+- Follow the existing design language.
+- Explain why a new component is required.
+
+Avoid duplicate components.
