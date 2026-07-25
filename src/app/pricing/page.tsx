@@ -1,11 +1,18 @@
 // Pricing Page
-// Reference mockup: billora_pricing_page.html
-// 3 plan cards (Starter/Growth/Business) + monthly-yearly toggle
+// Reference mockup: billora_pricing_page.png
+// Reuses PricingSection (already built for the homepage) inside its own
+// standalone route so it can be linked/shared/indexed directly.
+
+import Navbar from "@/components/layout/Navbar";
+import PricingSection from "@/components/marketing/PricingSection";
+import FooterCTA from "@/components/marketing/FooterCTA";
 
 export default function PricingPage() {
   return (
-    <main className="min-h-screen p-8">
-      <h1 className="text-2xl font-medium text-navy">Pricing Page — build me</h1>
+    <main className="min-h-screen bg-bg">
+      <Navbar />
+      <PricingSection />
+      <FooterCTA />
     </main>
   );
 }
