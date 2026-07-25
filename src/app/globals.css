@@ -7,6 +7,10 @@
   --font-mono: 'Roboto Mono', monospace;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   background: #F4F7FF;
 }
