@@ -1,0 +1,76 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id        String     @id @default(cuid())
+  name      String
+  email     String     @unique
+  password  String
+  business  String?
+  createdAt DateTime   @default(now())
+  customers Customer[]
+  invoices  Invoice[]
+  estimates Estimate[]
+  expenses  Expense[]
+}
+
+model Customer {
+  id        String    @id @default(cuid())
+  name      String
+  email     String?
+  userId    String
+  user      User      @relation(fields: [userId], references: [id])
+  invoices  Invoice[]
+  createdAt DateTime  @default(now())
+}
+
+model Invoice {
+  id         String        @id @default(cuid())
+  number     String
+  status     String        @default("draft") // draft, pending, paid, overdue
+  issueDate  DateTime
+  dueDate    DateTime
+  taxPercent Float         @default(0)
+  note       String?
+  customerId String
+  customer   Customer      @relation(fields: [customerId], references: [id])
+  userId     String
+  user       User          @relation(fields: [userId], references: [id])
+  items      InvoiceItem[]
+  createdAt  DateTime      @default(now())
+}
+
+model InvoiceItem {
+  id        String  @id @default(cuid())
+  desc      String
+  qty       Int     @default(1)
+  rate      Float
+  invoiceId String
+  invoice   Invoice @relation(fields: [invoiceId], references: [id])
+}
+
+model Estimate {
+  id         String   @id @default(cuid())
+  validUntil String?
+  status     String   @default("pending") // pending, approved, rejected
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  createdAt  DateTime @default(now())
+}
+
+model Expense {
+  id        String   @id @default(cuid())
+  category  String
+  amount    Float
+  note      String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+}
