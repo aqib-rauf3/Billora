@@ -4,6 +4,7 @@
 // standalone route so it can be linked/shared/indexed directly.
 
 import Navbar from "@/components/layout/Navbar";
+import Footer from "@/components/layout/Footer";
 import PricingSection from "@/components/marketing/PricingSection";
 import FooterCTA from "@/components/marketing/FooterCTA";
 
@@ -13,6 +14,7 @@ export default function PricingPage() {
       <Navbar />
       <PricingSection />
       <FooterCTA />
+      <Footer />
     </main>
   );
 }

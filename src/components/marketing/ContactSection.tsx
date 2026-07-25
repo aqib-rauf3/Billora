@@ -29,7 +29,7 @@ export default function ContactSection() {
           <span className="inline-block bg-redBg text-red text-xs px-3 py-1 rounded-full mb-4">
             We reply within a day
           </span>
-          <h2 className="text-2xl md:text-[28px] font-medium text-navy mb-2">Get in touch</h2>
+          <h2 className="text-2xl md:text-[28px] font-medium text-ink mb-2">Get in touch</h2>
           <p className="text-sm text-text">
             Questions about a plan, a bug, or a feature idea? We&apos;d love to hear it.
           </p>
@@ -39,12 +39,12 @@ export default function ContactSection() {
       <div className="grid md:grid-cols-[1fr_1.2fr] gap-5">
         <FadeInSection className="flex flex-col gap-3">
           {CONTACT_METHODS.map((m) => (
-            <div key={m.title} className="bg-white rounded-lg p-4 flex items-center gap-3">
+            <div key={m.title} className="bg-surface rounded-lg p-4 flex items-center gap-3">
               <div className="w-[34px] h-[34px] rounded-lg bg-redBg flex items-center justify-center flex-shrink-0">
                 <m.icon size={16} className="text-orange" />
               </div>
               <div>
-                <p className="text-sm font-medium text-navy">{m.title}</p>
+                <p className="text-sm font-medium text-ink">{m.title}</p>
                 <p className="text-xs text-muted mt-0.5">{m.detail}</p>
               </div>
             </div>
@@ -52,7 +52,7 @@ export default function ContactSection() {
         </FadeInSection>
 
         <FadeInSection delay={0.1}>
-          <form onSubmit={handleSubmit} className="bg-white rounded-xl p-6">
+          <form onSubmit={handleSubmit} className="bg-surface rounded-xl p-6">
             <div className="mb-3.5">
               <label className="text-xs text-text block mb-1.5">Full name</label>
               <input
@@ -60,7 +60,7 @@ export default function ContactSection() {
                 required
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
-                className="w-full text-sm border border-border rounded-md px-3 py-2 outline-none focus:border-navy"
+                className="w-full text-sm border border-border rounded-md px-3 py-2 outline-none focus:border-navy dark:focus:border-[#5B7FDB]"
               />
             </div>
             <div className="mb-3.5">
@@ -70,7 +70,7 @@ export default function ContactSection() {
                 required
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
-                className="w-full text-sm border border-border rounded-md px-3 py-2 outline-none focus:border-navy"
+                className="w-full text-sm border border-border rounded-md px-3 py-2 outline-none focus:border-navy dark:focus:border-[#5B7FDB]"
               />
             </div>
             <div className="mb-4.5">
@@ -80,7 +80,7 @@ export default function ContactSection() {
                 rows={3}
                 value={form.message}
                 onChange={(e) => setForm({ ...form, message: e.target.value })}
-                className="w-full text-sm border border-border rounded-md px-3 py-2 outline-none focus:border-navy resize-none"
+                className="w-full text-sm border border-border rounded-md px-3 py-2 outline-none focus:border-navy dark:focus:border-[#5B7FDB] resize-none"
               />
             </div>
             <button

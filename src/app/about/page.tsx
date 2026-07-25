@@ -4,6 +4,7 @@
 // standalone route so it can be linked/shared/indexed directly.
 
 import Navbar from "@/components/layout/Navbar";
+import Footer from "@/components/layout/Footer";
 import AboutSection from "@/components/marketing/AboutSection";
 import FooterCTA from "@/components/marketing/FooterCTA";
 
@@ -13,6 +14,7 @@ export default function AboutPage() {
       <Navbar />
       <AboutSection />
       <FooterCTA />
+      <Footer />
     </main>
   );
 }

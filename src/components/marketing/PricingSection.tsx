@@ -47,14 +47,14 @@ export default function PricingSection() {
           <span className="inline-block bg-redBg text-red text-xs px-3 py-1 rounded-full mb-4">
             7-day free trial, no card needed
           </span>
-          <h2 className="text-2xl md:text-[28px] font-medium text-navy mb-2">
+          <h2 className="text-2xl md:text-[28px] font-medium text-ink mb-2">
             Simple pricing, no surprises
           </h2>
           <p className="text-sm text-text">Cancel anytime. All plans include unlimited invoices.</p>
         </div>
 
         <div className="flex items-center justify-center gap-2.5 py-3 mb-8">
-          <span className={`text-sm ${!yearly ? "text-navy font-medium" : "text-text"}`}>Monthly</span>
+          <span className={`text-sm ${!yearly ? "text-ink font-medium" : "text-text"}`}>Monthly</span>
           <button
             onClick={() => setYearly(!yearly)}
             className="w-9 h-5 rounded-full bg-navy relative transition-colors"
@@ -66,7 +66,7 @@ export default function PricingSection() {
               }`}
             />
           </button>
-          <span className={`text-sm ${yearly ? "text-navy font-medium" : "text-text"}`}>Yearly</span>
+          <span className={`text-sm ${yearly ? "text-ink font-medium" : "text-text"}`}>Yearly</span>
           <span className="text-xs bg-greenBg text-green px-2 py-0.5 rounded-full">Save 20%</span>
         </div>
       </FadeInSection>
@@ -75,7 +75,7 @@ export default function PricingSection() {
         {PLANS.map((plan, i) => (
           <FadeInSection key={plan.name} delay={i * 0.1}>
             <div
-              className={`bg-white rounded-xl p-6 h-full relative ${
+              className={`bg-surface rounded-xl p-6 h-full relative ${
                 plan.highlight ? "border-2 border-orange" : "border border-border"
               }`}
             >
@@ -84,10 +84,10 @@ export default function PricingSection() {
                   Most popular
                 </div>
               )}
-              <p className="text-sm font-medium text-navy mb-1">{plan.name}</p>
+              <p className="text-sm font-medium text-ink mb-1">{plan.name}</p>
               <p className="text-xs text-muted mb-4">{plan.tagline}</p>
               <p className="mb-5">
-                <span className="text-[28px] font-medium text-navy">
+                <span className="text-[28px] font-medium text-ink">
                   Rs. {(yearly ? plan.yearly : plan.monthly).toLocaleString()}
                 </span>
                 <span className="text-xs text-muted"> /month</span>
@@ -96,7 +96,7 @@ export default function PricingSection() {
                 className={`w-full rounded-md py-2.5 text-sm mb-5 transition-colors ${
                   plan.highlight
                     ? "bg-navy text-white hover:bg-navyLight"
-                    : "bg-white border border-[#C7D2F0] text-navy hover:bg-bg"
+                    : "bg-surface border border-[#C7D2F0] dark:border-[#2A3555] text-ink hover:bg-bg"
                 }`}
               >
                 {plan.monthly === 0 ? "Start free" : "Start free trial"}

@@ -1,6 +1,7 @@
 import { ReactNode } from "react";
 import { IconCheck } from "@tabler/icons-react";
 import Navbar from "@/components/layout/Navbar";
+import Footer from "@/components/layout/Footer";
 import FadeInSection from "@/components/motion/FadeInSection";
 
 export interface FeatureBenefit {
@@ -47,20 +48,20 @@ export default function FeaturePageLayout({
           <span className="inline-block bg-redBg text-red text-xs px-3 py-1 rounded-full mb-4">
             {badge}
           </span>
-          <h1 className="text-3xl md:text-[34px] leading-tight font-medium text-navy mb-4">
+          <h1 className="text-3xl md:text-[34px] leading-tight font-medium text-ink mb-4">
             {title}
           </h1>
           <p className="text-sm md:text-[15px] text-text leading-relaxed mb-6 max-w-md">
             {description}
           </p>
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-3">
             <a
               href={primaryCta.href}
               className="bg-navy text-white rounded-md px-6 py-3 text-sm hover:bg-navyLight transition-colors"
             >
               {primaryCta.label}
             </a>
-            <button className="bg-white border border-[#C7D2F0] text-navy rounded-md px-6 py-3 text-sm hover:bg-bg transition-colors">
+            <button className="bg-surface border border-[#C7D2F0] dark:border-[#2A3555] text-ink rounded-md px-6 py-3 text-sm hover:bg-bg transition-colors">
               {secondaryCtaLabel}
             </button>
           </div>
@@ -78,8 +79,8 @@ export default function FeaturePageLayout({
         <div className="grid md:grid-cols-2 gap-4">
           {benefits.map((b, i) => (
             <FadeInSection key={b.title} delay={i * 0.08}>
-              <div className="bg-white rounded-lg p-5 h-full">
-                <p className="text-sm font-medium text-navy mb-1">{b.title}</p>
+              <div className="bg-surface rounded-lg p-5 h-full">
+                <p className="text-sm font-medium text-ink mb-1">{b.title}</p>
                 <p className="text-xs text-muted">{b.desc}</p>
               </div>
             </FadeInSection>
@@ -99,6 +100,8 @@ export default function FeaturePageLayout({
           </a>
         </section>
       </FadeInSection>
+
+      <Footer />
     </main>
   );
 }
@@ -129,12 +132,12 @@ export function PreviewCard({
   }[statusTone];
 
   return (
-    <div className="bg-white rounded-xl p-5 shadow-sm">
+    <div className="bg-surface rounded-xl p-5 shadow-sm">
       <div className="flex justify-between items-center mb-3.5">
-        <span className="text-sm font-medium text-navy">{eyebrow}</span>
+        <span className="text-sm font-medium text-ink">{eyebrow}</span>
         <span className={`text-xs px-2.5 py-0.5 rounded-full ${toneClasses}`}>{status}</span>
       </div>
-      <div className="border-y border-[#EEF1FB] py-3 mb-3 space-y-2">
+      <div className="border-y border-[#EEF1FB] dark:border-[#232B45] py-3 mb-3 space-y-2">
         {rows.map((r) => (
           <div key={r.label} className="flex justify-between text-xs text-text">
             <span>{r.label}</span>
@@ -143,7 +146,7 @@ export function PreviewCard({
         ))}
       </div>
       {totalLabel && totalValue && (
-        <div className="flex justify-between text-base font-medium text-navy mb-4">
+        <div className="flex justify-between text-base font-medium text-ink mb-4">
           <span>{totalLabel}</span>
           <span className="font-mono">{totalValue}</span>
         </div>

@@ -5,14 +5,73 @@
 :root {
   --font-sans: 'Inter', sans-serif;
   --font-mono: 'Roboto Mono', monospace;
+
+  /* Light theme (default) — values match the original Billora palette */
+  --color-ink: 11 37 69;         /* headings / primary text, was text-navy */
+  --color-bg: 244 247 255;       /* page background */
+  --color-surface: 255 255 255;  /* cards, navbar, panels */
+  --color-muted: 122 132 172;    /* secondary/meta text */
+  --color-text: 74 85 128;       /* body text */
+  --color-border: 217 224 245;
+  --color-green: 31 139 76;
+  --color-green-bg: 233 247 238;
+  --color-amber: 184 114 12;
+  --color-amber-bg: 255 244 229;
+  --color-red: 199 55 29;
+  --color-red-bg: 255 233 229;
+
+  color-scheme: light;
+}
+
+.dark {
+  /* Dark theme — deep navy, in keeping with Billora's existing brand navy
+     rather than a generic black, so it still feels like the same product. */
+  --color-ink: 237 241 251;
+  --color-bg: 8 13 26;
+  --color-surface: 15 23 42;
+  --color-muted: 138 147 184;
+  --color-text: 183 191 222;
+  --color-border: 35 43 69;
+  --color-green: 52 194 117;
+  --color-green-bg: 17 51 34;
+  --color-amber: 226 168 61;
+  --color-amber-bg: 58 42 15;
+  --color-red: 240 80 58;
+  --color-red-bg: 58 21 18;
+
+  color-scheme: dark;
 }
 
 html {
   scroll-behavior: smooth;
 }
 
+/* Used by the horizontal cases gallery (CasesSection) — hides the
+   scrollbar while keeping native touch/trackpad scroll fully functional. */
+.scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
 body {
-  background: #F4F7FF;
+  background: rgb(var(--color-bg));
+  color: rgb(var(--color-text));
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* iOS Safari zooms the whole page in when a focused input's font-size is
+   below 16px. Our form fields use text-sm (14px) to match the rest of the
+   UI, so bump them to 16px only below the md breakpoint where this
+   auto-zoom actually happens; desktop sizing is untouched. */
+@media (max-width: 767px) {
+  input,
+  textarea,
+  select {
+    font-size: 16px;
+  }
 }
 
 @media print {

@@ -61,7 +61,7 @@ export default function DocumentPreviewCard({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 mb-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
         <div>
           <p className="text-xs text-muted uppercase tracking-wide mb-1">{from.label}</p>
           <p className="text-sm text-navy font-medium">{from.name || "—"}</p>

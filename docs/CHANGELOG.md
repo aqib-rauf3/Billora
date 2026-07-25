@@ -40,6 +40,22 @@ Documentation
 
 # Upcoming
 
+## Merged
+
+- Combined two divergent working branches into one:
+  - Landing page redesign branch: sticky stacked-panel scroll sequence
+    (`StackedPanel`), redesigned `StatsStrip` (icon cards + heading), new
+    `CasesSection`, `HeroInvoiceMockup`, and `PageLoader`.
+  - Login page 3D branch: replaced the CSS-only phone mockup with a real
+    3D model (`Phone3D`, `public/models/iphone-17-pro-max.glb`) rendered
+    via `@react-three/fiber`, with the Billora dashboard swapped onto the
+    screen texture (`public/screens/dashboard-screen.png`).
+- Added `@react-three/fiber`, `@react-three/drei`, `three`, and
+  `@types/three` to `package.json` to support the 3D phone mockup.
+- Adopted `defaultTheme="light"` in `ThemeProvider` (from the 3D branch)
+  so first-time visitors see Billora's light theme by default, with
+  `enableSystem` kept as an opt-in toggle option.
+
 ## Added
 
 - Initial project documentation

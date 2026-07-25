@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import ThemeProvider from "@/components/layout/ThemeProvider";
+import ConditionalNeonGlow from "@/components/marketing/ConditionalNeonGlow";
 
 export const metadata: Metadata = {
   title: "Billora — Invoicing for freelancers",
@@ -12,8 +14,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body className="font-sans">{children}</body>
+    // suppressHydrationWarning is required by next-themes: it sets the
+    // `class` attribute on <html> before React hydrates (to avoid a
+    // light-mode flash for dark-mode users), which otherwise triggers a
+    // harmless server/client mismatch warning on this one attribute.
+    <html lang="en" suppressHydrationWarning>
+      <body className="font-sans bg-bg text-text">
+        <ThemeProvider>
+          <ConditionalNeonGlow />
+          {children}
+        </ThemeProvider>
+      </body>
     </html>
   );
 }

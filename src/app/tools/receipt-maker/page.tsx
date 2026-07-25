@@ -8,13 +8,14 @@
 import { useState } from "react";
 import { IconPrinter } from "@tabler/icons-react";
 import Navbar from "@/components/layout/Navbar";
+import Footer from "@/components/layout/Footer";
 import FadeInSection from "@/components/motion/FadeInSection";
 import LineItemsEditor from "@/components/tools/LineItemsEditor";
 import DocumentPreviewCard from "@/components/tools/DocumentPreviewCard";
 import { useLineItems } from "@/hooks/useLineItems";
 
 const inputClass =
-  "w-full text-sm border border-border rounded-md px-3 py-2 outline-none focus:border-navy bg-white";
+  "w-full text-sm border border-border rounded-md px-3 py-2 outline-none focus:border-navy dark:focus:border-[#5B7FDB] bg-surface";
 const labelClass = "text-xs text-text block mb-1.5";
 
 const PAYMENT_METHODS = ["Cash", "Bank transfer", "Card", "Other"];
@@ -40,7 +41,7 @@ export default function ReceiptMakerTool() {
           <span className="inline-block bg-redBg text-red text-xs px-3 py-1 rounded-full mb-4">
             Free tool
           </span>
-          <h1 className="text-2xl md:text-[28px] font-medium text-navy mb-2">
+          <h1 className="text-2xl md:text-[28px] font-medium text-ink mb-2">
             Receipt Maker
           </h1>
           <p className="text-sm text-text mb-8 max-w-lg">
@@ -50,8 +51,8 @@ export default function ReceiptMakerTool() {
         </FadeInSection>
 
         <div className="grid md:grid-cols-[1.1fr_1fr] gap-6 print:block">
-          <FadeInSection className="bg-white rounded-xl p-6 print:hidden">
-            <div className="grid grid-cols-2 gap-4 mb-5">
+          <FadeInSection className="bg-surface rounded-xl p-6 print:hidden">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
               <div>
                 <label className={labelClass}>From</label>
                 <input
@@ -88,7 +89,7 @@ export default function ReceiptMakerTool() {
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-4 mb-5">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-5">
               <div>
                 <label className={labelClass}>Receipt #</label>
                 <input
@@ -173,6 +174,8 @@ export default function ReceiptMakerTool() {
           </FadeInSection>
         </div>
       </section>
+
+      <Footer />
     </main>
   );
 }
