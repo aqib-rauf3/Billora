@@ -9,7 +9,8 @@
 //   shouldn't live inside page content itself.
 
 import ThemeToggle from "@/components/layout/ThemeToggle";
-import { IconMenu2, IconUserCircle } from "@tabler/icons-react";
+import AccountMenu from "@/components/layout/AccountMenu";
+import { IconMenu2 } from "@tabler/icons-react";
 
 export default function AppTopBar({ onMenuClick }: { onMenuClick: () => void }) {
   return (
@@ -31,12 +32,7 @@ export default function AppTopBar({ onMenuClick }: { onMenuClick: () => void }) 
 
       <div className="flex items-center gap-3">
         <ThemeToggle />
-        <button
-          aria-label="Account"
-          className="text-muted hover:text-ink transition-colors"
-        >
-          <IconUserCircle size={22} />
-        </button>
+        <AccountMenu />
       </div>
     </header>
   );

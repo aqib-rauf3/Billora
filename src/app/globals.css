@@ -93,13 +93,6 @@ body {
   }
 }
 
-/* Custom cursor — only hides the native cursor when CustomCursor.tsx has
-   confirmed a fine-pointer (mouse) device and mounted its own dot/ring. */
-body.custom-cursor-active,
-body.custom-cursor-active * {
-  cursor: none !important;
-}
-
 @media print {
   body * {
     visibility: hidden;

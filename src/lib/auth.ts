@@ -39,8 +39,12 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       if (user) token.id = user.id;
+      // Triggered by the client calling useSession().update({ name }) after
+      // a successful PATCH /api/user — keeps the navbar/account menu in
+      // sync with a profile-name edit without requiring a re-login.
+      if (trigger === "update" && session?.name) token.name = session.name;
       return token;
     },
     async session({ session, token }) {

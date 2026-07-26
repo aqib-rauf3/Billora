@@ -38,7 +38,6 @@ export default function StackedPanel({
   const scale = useTransform(scrollYProgress, [0, 1], [1, 0.88]);
   const y = useTransform(scrollYProgress, [0, 1], [0, -70]);
   const opacity = useTransform(scrollYProgress, [0, 1], [1, 0.7]);
-  const rotateX = useTransform(scrollYProgress, [0, 1], [0, -3]);
 
   return (
     <div
@@ -52,7 +51,7 @@ export default function StackedPanel({
         style={
           reduceMotion
             ? undefined
-            : { scale, y, opacity, rotateX, transformPerspective: 1200, transformOrigin: "bottom center" }
+            : { scale, y, opacity, transformOrigin: "bottom center" }
         }
         className={[
           "sticky top-0 scroll-mt-20 min-h-screen flex flex-col",
