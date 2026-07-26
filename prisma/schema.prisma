@@ -25,9 +25,11 @@ model Customer {
   id        String    @id @default(cuid())
   name      String
   email     String?
+  company   String?
   userId    String
   user      User      @relation(fields: [userId], references: [id])
   invoices  Invoice[]
+  estimates Estimate[]
   createdAt DateTime  @default(now())
 }
 
@@ -57,12 +59,16 @@ model InvoiceItem {
 }
 
 model Estimate {
-  id         String   @id @default(cuid())
+  id         String    @id @default(cuid())
+  number     String?
   validUntil String?
-  status     String   @default("pending") // pending, approved, rejected
+  amount     Float     @default(0)
+  status     String    @default("pending") // pending, approved, rejected
+  customerId String?
+  customer   Customer? @relation(fields: [customerId], references: [id])
   userId     String
-  user       User     @relation(fields: [userId], references: [id])
-  createdAt  DateTime @default(now())
+  user       User      @relation(fields: [userId], references: [id])
+  createdAt  DateTime  @default(now())
 }
 
 model Expense {

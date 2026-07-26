@@ -18,6 +18,7 @@ const updateSchema = z.object({
     .email("Enter a valid email address.")
     .optional()
     .or(z.literal("")),
+  company: z.string().trim().optional(),
 });
 
 async function findOwnedCustomer(id: string, userId: string) {
@@ -63,6 +64,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     data: {
       ...(parsed.data.name !== undefined && { name: parsed.data.name }),
       ...(parsed.data.email !== undefined && { email: parsed.data.email || null }),
+      ...(parsed.data.company !== undefined && { company: parsed.data.company || null }),
     },
   });
 

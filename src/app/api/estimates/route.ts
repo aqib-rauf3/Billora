@@ -1,10 +1,10 @@
 // List + create estimates
 // Methods: GET, POST
 //
-// Note: the current Estimate model (prisma/schema.prisma) only has
-// validUntil + status — no customer/items/amount like Invoice has. Wiring
-// it as-is for now; flag to Aqib if estimates should mirror the Invoice
-// shape (customer + line items) once the Estimate Generator UI is built.
+// Estimate now mirrors Invoice's shape (number/customer/amount) — schema
+// extended in prisma/migrations/20260726045750_customer_company_estimate_shape
+// so the Estimates page can show real client + value data instead of the
+// old validUntil-only stub.
 
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
@@ -12,9 +12,17 @@ import { prisma } from "@/lib/prisma";
 import { getSessionUserId, unauthorized } from "@/lib/apiAuth";
 
 const estimateSchema = z.object({
+  customerId: z.string().min(1, "Select a customer.").optional(),
+  number: z.string().trim().optional(),
+  amount: z.number().nonnegative().default(0),
   validUntil: z.string().trim().optional(),
   status: z.enum(["pending", "approved", "rejected"]).default("pending"),
 });
+
+async function nextEstimateNumber(userId: string) {
+  const count = await prisma.estimate.count({ where: { userId } });
+  return `EST-${String(count + 1).padStart(4, "0")}`;
+}
 
 export async function GET() {
   const userId = await getSessionUserId();
@@ -22,6 +30,7 @@ export async function GET() {
 
   const estimates = await prisma.estimate.findMany({
     where: { userId },
+    include: { customer: true },
     orderBy: { createdAt: "desc" },
   });
 
@@ -47,8 +56,25 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  if (parsed.data.customerId) {
+    const customer = await prisma.customer.findFirst({
+      where: { id: parsed.data.customerId, userId },
+    });
+    if (!customer) {
+      return NextResponse.json({ error: "Customer not found." }, { status: 404 });
+    }
+  }
+
   const estimate = await prisma.estimate.create({
-    data: { validUntil: parsed.data.validUntil, status: parsed.data.status, userId },
+    data: {
+      number: parsed.data.number || (await nextEstimateNumber(userId)),
+      validUntil: parsed.data.validUntil,
+      amount: parsed.data.amount,
+      status: parsed.data.status,
+      customerId: parsed.data.customerId,
+      userId,
+    },
+    include: { customer: true },
   });
 
   return NextResponse.json({ estimate }, { status: 201 });

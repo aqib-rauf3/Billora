@@ -1,10 +1,8 @@
 // Sample data for Dashboard, Invoices, Estimates, Expenses, Customers.
-// TODO: replace every export here with real fetches once the API routes
-// (src/app/api/*) are wired to Prisma — field names below intentionally
-// mirror prisma/schema.prisma (Invoice.status/issueDate/dueDate,
-// InvoiceItem.desc/qty/rate, Expense.category/amount/note, etc.) so that
-// swap is a rename, not a redesign. A few UI-only fields (customerName,
-// amount on Estimate) aren't in the current schema yet — marked below.
+// NOTE: no longer imported by any app page — Dashboard/Invoices/Estimates/
+// Expenses/Customers all fetch real data from src/app/api/* now (see
+// src/lib/liveData.ts for the live equivalents of the types below). Kept
+// only as illustrative reference data / for local seeding if useful.
 
 export interface MockCustomer {
   id: string;

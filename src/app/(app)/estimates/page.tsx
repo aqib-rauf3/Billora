@@ -1,25 +1,19 @@
 "use client";
 
 // Estimates
-// No dedicated app mockup exists for this yet, so it mirrors the Invoice
-// History pattern (status tabs + search + table) for design consistency —
-// same StatusBadge/EmptyState components, different status set
-// (pending/approved/rejected, per prisma/schema.prisma's Estimate model).
-// "New estimate" reuses the free Estimate Generator tool rather than
-// duplicating a second line-item builder for a feature with no schema
-// fields (amount/customer/items) yet.
+// Status tabs + search + table, same pattern as Invoice History — now
+// backed by /api/estimates (Prisma), which mirrors Invoice's shape
+// (number/customer/amount) after the schema extension.
 
 import { useMemo, useState } from "react";
 import { IconSearch, IconClipboardText } from "@tabler/icons-react";
 import StatusBadge from "@/components/dashboard/StatusBadge";
 import StatCard from "@/components/dashboard/StatCard";
 import EmptyState from "@/components/dashboard/EmptyState";
-import { ESTIMATES } from "@/lib/mockData";
-import type { EstimateStatus } from "@/lib/mockData";
-
-const money = (n: number) => `Rs. ${n.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
-const dateFmt = (iso: string) =>
-  new Date(iso).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+import ErrorState from "@/components/dashboard/ErrorState";
+import SkeletonRows from "@/components/dashboard/SkeletonRows";
+import { useApiData } from "@/hooks/useApiData";
+import { money, dateFmt, type LiveEstimate, type EstimateStatus } from "@/lib/liveData";
 
 const TABS: { label: string; value: EstimateStatus | "all" }[] = [
   { label: "All", value: "all" },
@@ -29,22 +23,32 @@ const TABS: { label: string; value: EstimateStatus | "all" }[] = [
 ];
 
 export default function EstimatesPage() {
+  const { data: estimates, loading, error, refetch } = useApiData<LiveEstimate>(
+    "/api/estimates",
+    "estimates"
+  );
   const [tab, setTab] = useState<EstimateStatus | "all">("all");
   const [query, setQuery] = useState("");
 
   const filtered = useMemo(() => {
-    return ESTIMATES.filter((est) => {
+    if (!estimates) return [];
+    return estimates.filter((est) => {
       const matchesTab = tab === "all" || est.status === tab;
+      const name = est.customer?.name ?? "";
       const matchesQuery =
         query.trim() === "" ||
-        est.customerName.toLowerCase().includes(query.toLowerCase()) ||
-        est.number.toLowerCase().includes(query.toLowerCase());
+        name.toLowerCase().includes(query.toLowerCase()) ||
+        (est.number ?? "").toLowerCase().includes(query.toLowerCase());
       return matchesTab && matchesQuery;
     });
-  }, [tab, query]);
+  }, [estimates, tab, query]);
 
-  const approvedValue = ESTIMATES.filter((e) => e.status === "approved").reduce((s, e) => s + e.amount, 0);
-  const pendingValue = ESTIMATES.filter((e) => e.status === "pending").reduce((s, e) => s + e.amount, 0);
+  const approvedValue = (estimates ?? [])
+    .filter((e) => e.status === "approved")
+    .reduce((s, e) => s + e.amount, 0);
+  const pendingValue = (estimates ?? [])
+    .filter((e) => e.status === "pending")
+    .reduce((s, e) => s + e.amount, 0);
 
   return (
     <div>
@@ -61,7 +65,7 @@ export default function EstimatesPage() {
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
         <StatCard label="Awaiting response" value={money(pendingValue)} />
         <StatCard label="Approved value" value={money(approvedValue)} />
-        <StatCard label="Total estimates" value={String(ESTIMATES.length)} />
+        <StatCard label="Total estimates" value={String(estimates?.length ?? 0)} />
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
@@ -92,11 +96,19 @@ export default function EstimatesPage() {
       </div>
 
       <div className="bg-surface border border-border rounded-lg overflow-hidden">
-        {filtered.length === 0 ? (
+        {loading ? (
+          <SkeletonRows />
+        ) : error ? (
+          <ErrorState message={error} onRetry={refetch} />
+        ) : filtered.length === 0 ? (
           <EmptyState
             icon={IconClipboardText}
-            title="No estimates found"
-            description="Try a different search or filter, or create a new estimate."
+            title={estimates && estimates.length === 0 ? "No estimates yet" : "No estimates found"}
+            description={
+              estimates && estimates.length === 0
+                ? "Create your first estimate to see it here."
+                : "Try a different search or filter, or create a new estimate."
+            }
             action={{ label: "Clear filters", onClick: () => { setTab("all"); setQuery(""); } }}
           />
         ) : (
@@ -113,9 +125,11 @@ export default function EstimatesPage() {
                 key={est.id}
                 className="grid grid-cols-2 md:grid-cols-[2fr_1fr_1fr_1fr_auto] gap-x-4 gap-y-1 px-5 py-3.5 border-b border-border last:border-0 hover:bg-bg/60 transition-colors"
               >
-                <p className="text-sm text-ink col-span-2 md:col-span-1 truncate">{est.customerName}</p>
-                <p className="text-xs text-muted">{est.number}</p>
-                <p className="text-xs text-muted">{dateFmt(est.validUntil)}</p>
+                <p className="text-sm text-ink col-span-2 md:col-span-1 truncate">
+                  {est.customer?.name ?? "—"}
+                </p>
+                <p className="text-xs text-muted">{est.number ?? "—"}</p>
+                <p className="text-xs text-muted">{est.validUntil ? dateFmt(est.validUntil) : "—"}</p>
                 <p className="text-sm font-mono text-ink md:text-right">{money(est.amount)}</p>
                 <div className="md:w-20 flex md:justify-end">
                   <StatusBadge status={est.status} />

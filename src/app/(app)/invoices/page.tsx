@@ -2,19 +2,17 @@
 
 // Invoice History
 // Reference mockup: billora_invoice_history_page.png
-// Status filter tabs + search + table. See src/lib/mockData.ts for the
-// TODO on swapping this to a real fetch.
+// Status filter tabs + search + table, now backed by /api/invoices
+// (Prisma) instead of src/lib/mockData.ts.
 
 import { useMemo, useState } from "react";
 import { IconSearch, IconFileInvoice } from "@tabler/icons-react";
 import StatusBadge from "@/components/dashboard/StatusBadge";
 import EmptyState from "@/components/dashboard/EmptyState";
-import { INVOICES, invoiceTotal } from "@/lib/mockData";
-import type { InvoiceStatus } from "@/lib/mockData";
-
-const money = (n: number) => `Rs. ${n.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
-const dateFmt = (iso: string) =>
-  new Date(iso).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+import ErrorState from "@/components/dashboard/ErrorState";
+import SkeletonRows from "@/components/dashboard/SkeletonRows";
+import { useApiData } from "@/hooks/useApiData";
+import { money, dateFmt, type LiveInvoice, type InvoiceStatus } from "@/lib/liveData";
 
 const TABS: { label: string; value: InvoiceStatus | "all" }[] = [
   { label: "All", value: "all" },
@@ -24,19 +22,21 @@ const TABS: { label: string; value: InvoiceStatus | "all" }[] = [
 ];
 
 export default function InvoiceHistoryPage() {
+  const { data: invoices, loading, error, refetch } = useApiData<LiveInvoice>("/api/invoices", "invoices");
   const [tab, setTab] = useState<InvoiceStatus | "all">("all");
   const [query, setQuery] = useState("");
 
   const filtered = useMemo(() => {
-    return INVOICES.filter((inv) => {
+    if (!invoices) return [];
+    return invoices.filter((inv) => {
       const matchesTab = tab === "all" || inv.status === tab;
       const matchesQuery =
         query.trim() === "" ||
-        inv.customerName.toLowerCase().includes(query.toLowerCase()) ||
+        inv.customer.name.toLowerCase().includes(query.toLowerCase()) ||
         inv.number.toLowerCase().includes(query.toLowerCase());
       return matchesTab && matchesQuery;
     });
-  }, [tab, query]);
+  }, [invoices, tab, query]);
 
   return (
     <div>
@@ -78,11 +78,19 @@ export default function InvoiceHistoryPage() {
       </div>
 
       <div className="bg-surface border border-border rounded-lg overflow-hidden">
-        {filtered.length === 0 ? (
+        {loading ? (
+          <SkeletonRows />
+        ) : error ? (
+          <ErrorState message={error} onRetry={refetch} />
+        ) : filtered.length === 0 ? (
           <EmptyState
             icon={IconFileInvoice}
-            title="No invoices found"
-            description="Try a different search or filter, or create a new invoice."
+            title={invoices && invoices.length === 0 ? "No invoices yet" : "No invoices found"}
+            description={
+              invoices && invoices.length === 0
+                ? "Create your first invoice to see it here."
+                : "Try a different search or filter, or create a new invoice."
+            }
             action={{ label: "Clear filters", onClick: () => { setTab("all"); setQuery(""); } }}
           />
         ) : (
@@ -99,10 +107,10 @@ export default function InvoiceHistoryPage() {
                 key={inv.id}
                 className="grid grid-cols-2 md:grid-cols-[2fr_1fr_1fr_1fr_auto] gap-x-4 gap-y-1 px-5 py-3.5 border-b border-border last:border-0 hover:bg-bg/60 transition-colors"
               >
-                <p className="text-sm text-ink col-span-2 md:col-span-1 truncate">{inv.customerName}</p>
+                <p className="text-sm text-ink col-span-2 md:col-span-1 truncate">{inv.customer.name}</p>
                 <p className="text-xs text-muted">{inv.number}</p>
                 <p className="text-xs text-muted">{dateFmt(inv.issueDate)}</p>
-                <p className="text-sm font-mono text-ink md:text-right">{money(invoiceTotal(inv))}</p>
+                <p className="text-sm font-mono text-ink md:text-right">{money(inv.total)}</p>
                 <div className="md:w-20 flex md:justify-end">
                   <StatusBadge status={inv.status} />
                 </div>

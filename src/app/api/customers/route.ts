@@ -14,6 +14,7 @@ const customerSchema = z.object({
     .email("Enter a valid email address.")
     .optional()
     .or(z.literal("")),
+  company: z.string().trim().optional(),
 });
 
 export async function GET() {
@@ -48,7 +49,12 @@ export async function POST(req: NextRequest) {
   }
 
   const customer = await prisma.customer.create({
-    data: { name: parsed.data.name, email: parsed.data.email || null, userId },
+    data: {
+      name: parsed.data.name,
+      email: parsed.data.email || null,
+      company: parsed.data.company || null,
+      userId,
+    },
   });
 
   return NextResponse.json({ customer }, { status: 201 });

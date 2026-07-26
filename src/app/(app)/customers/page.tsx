@@ -2,16 +2,16 @@
 
 // Customer Management
 // Reference mockup: billora_customer_management_page.png
-// Search + grid of customer cards, "Add customer" quick-add modal.
+// Search + grid of customer cards, "Add customer" quick-add modal — now
+// backed by /api/customers and /api/invoices (Prisma) instead of mock data.
 
 import { useMemo, useState } from "react";
-import { IconSearch, IconUsers, IconPlus, IconMail } from "@tabler/icons-react";
+import { IconSearch, IconUsers, IconPlus, IconMail, IconAlertTriangle } from "@tabler/icons-react";
 import EmptyState from "@/components/dashboard/EmptyState";
+import ErrorState from "@/components/dashboard/ErrorState";
 import Modal from "@/components/ui/Modal";
-import { CUSTOMERS as INITIAL_CUSTOMERS, INVOICES, invoiceTotal } from "@/lib/mockData";
-import type { MockCustomer } from "@/lib/mockData";
-
-const money = (n: number) => `Rs. ${n.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
+import { useApiData } from "@/hooks/useApiData";
+import { money, type LiveCustomer, type LiveInvoice } from "@/lib/liveData";
 
 const inputClass =
   "w-full text-sm border border-border rounded-md px-3 py-2 outline-none focus:border-navy dark:focus:border-[#5B7FDB] bg-surface";
@@ -25,22 +25,31 @@ const initials = (name: string) =>
     .join("")
     .toUpperCase();
 
-let idCounter = 0;
-
 export default function CustomerManagementPage() {
-  const [customers, setCustomers] = useState<MockCustomer[]>(INITIAL_CUSTOMERS);
+  const { data: customers, loading, error, refetch } = useApiData<LiveCustomer>(
+    "/api/customers",
+    "customers"
+  );
+  const { data: invoices } = useApiData<LiveInvoice>("/api/invoices", "invoices");
+
   const [query, setQuery] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
 
   const [name, setName] = useState("");
   const [company, setCompany] = useState("");
   const [email, setEmail] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [formError, setFormError] = useState("");
 
   const filtered = useMemo(() => {
+    if (!customers) return [];
     if (query.trim() === "") return customers;
     const q = query.toLowerCase();
     return customers.filter(
-      (c) => c.name.toLowerCase().includes(q) || c.company.toLowerCase().includes(q) || c.email.toLowerCase().includes(q)
+      (c) =>
+        c.name.toLowerCase().includes(q) ||
+        (c.company ?? "").toLowerCase().includes(q) ||
+        (c.email ?? "").toLowerCase().includes(q)
     );
   }, [customers, query]);
 
@@ -48,21 +57,31 @@ export default function CustomerManagementPage() {
     setName("");
     setCompany("");
     setEmail("");
+    setFormError("");
   };
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (name.trim().length < 2) return;
-    // TODO: POST to /api/customers once wired to Prisma (DEVELOPMENT_RULES.md).
-    const newCustomer: MockCustomer = {
-      id: `local-${idCounter++}`,
-      name: name.trim(),
-      company: company.trim() || "—",
-      email: email.trim(),
-      createdAt: new Date().toISOString().slice(0, 10),
-    };
-    setCustomers((prev) => [newCustomer, ...prev]);
-    resetForm();
-    setModalOpen(false);
+    setSaving(true);
+    setFormError("");
+    try {
+      const res = await fetch("/api/customers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: name.trim(), company: company.trim(), email: email.trim() }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        throw new Error(body?.error ?? "Couldn't add the customer.");
+      }
+      resetForm();
+      setModalOpen(false);
+      refetch();
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : "Couldn't add the customer.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -91,22 +110,36 @@ export default function CustomerManagementPage() {
         </div>
       </div>
 
-      {filtered.length === 0 ? (
+      {loading ? (
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="bg-surface border border-border rounded-lg p-5 h-[148px] animate-pulse" />
+          ))}
+        </div>
+      ) : error ? (
+        <div className="bg-surface border border-border rounded-lg">
+          <ErrorState message={error} onRetry={refetch} />
+        </div>
+      ) : filtered.length === 0 ? (
         <div className="bg-surface border border-border rounded-lg">
           <EmptyState
             icon={IconUsers}
-            title="No customers found"
-            description="Try a different search, or add a new customer."
+            title={customers && customers.length === 0 ? "No customers yet" : "No customers found"}
+            description={
+              customers && customers.length === 0
+                ? "Add your first customer to start invoicing."
+                : "Try a different search, or add a new customer."
+            }
             action={{ label: "Add customer", onClick: () => setModalOpen(true) }}
           />
         </div>
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filtered.map((c) => {
-            const customerInvoices = INVOICES.filter((inv) => inv.customerId === c.id);
+            const customerInvoices = (invoices ?? []).filter((inv) => inv.customerId === c.id);
             const billed = customerInvoices
               .filter((inv) => inv.status === "paid")
-              .reduce((sum, inv) => sum + invoiceTotal(inv), 0);
+              .reduce((sum, inv) => sum + inv.total, 0);
 
             return (
               <div
@@ -119,7 +152,7 @@ export default function CustomerManagementPage() {
                   </div>
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-ink truncate">{c.name}</p>
-                    <p className="text-xs text-muted truncate">{c.company}</p>
+                    <p className="text-xs text-muted truncate">{c.company || "—"}</p>
                   </div>
                 </div>
 
@@ -160,13 +193,20 @@ export default function CustomerManagementPage() {
             </button>
             <button
               onClick={handleAdd}
-              className="bg-navy text-white rounded-md px-4 py-2 text-sm hover:bg-navyLight transition-colors"
+              disabled={saving}
+              className="bg-navy text-white rounded-md px-4 py-2 text-sm hover:bg-navyLight transition-colors disabled:opacity-60"
             >
-              Add
+              {saving ? "Adding…" : "Add"}
             </button>
           </>
         }
       >
+        {formError && (
+          <div className="flex items-start gap-2 bg-redBg text-red text-xs rounded-md px-3 py-2.5 mb-3.5">
+            <IconAlertTriangle size={14} className="flex-shrink-0 mt-0.5" />
+            {formError}
+          </div>
+        )}
         <div className="mb-3.5">
           <label className={labelClass}>Name</label>
           <input
