@@ -1,4 +1,8 @@
+"use client";
+
+import { useState } from "react";
 import FadeInSection from "@/components/motion/FadeInSection";
+import { IconBrandX, IconBrandLinkedin, IconBrandInstagram, IconArrowRight, IconCheck } from "@tabler/icons-react";
 
 const FOOTER_COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
   {
@@ -26,6 +30,29 @@ const FOOTER_COLUMNS: { title: string; links: { label: string; href: string }[] 
       { label: "Log in", href: "/login" },
     ],
   },
+  {
+    title: "Resources",
+    links: [
+      { label: "Docs", href: "/docs" },
+      { label: "API", href: "/api-reference" },
+      { label: "Roadmap", href: "/roadmap" },
+      { label: "Changelog", href: "/changelog" },
+      { label: "Status", href: "/status" },
+    ],
+  },
+  {
+    title: "Legal",
+    links: [
+      { label: "Privacy Policy", href: "/privacy" },
+      { label: "Terms of Service", href: "/terms" },
+    ],
+  },
+];
+
+const SOCIALS = [
+  { icon: IconBrandX, label: "X (Twitter)", href: "https://x.com" },
+  { icon: IconBrandLinkedin, label: "LinkedIn", href: "https://linkedin.com" },
+  { icon: IconBrandInstagram, label: "Instagram", href: "https://instagram.com" },
 ];
 
 // Real site-wide footer — every marketing/tool page routes through here so
@@ -33,19 +60,73 @@ const FOOTER_COLUMNS: { title: string; links: { label: string; href: string }[] 
 // reachable without typing a URL by hand. Reuses the navy footer band
 // styling already established by FooterCTA to keep one design language.
 export default function Footer() {
+  const [email, setEmail] = useState("");
+  const [subscribed, setSubscribed] = useState(false);
+
+  const handleSubscribe = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.includes("@")) return;
+    // TODO: wire to an email list provider (e.g. Resend/Mailchimp) once
+    // one is connected — for now this only confirms the form itself works.
+    setSubscribed(true);
+  };
+
   return (
     <FadeInSection>
       <footer className="bg-navy px-7 pt-14 pb-8">
         <div className="max-w-6xl mx-auto">
-          <div className="grid gap-10 md:grid-cols-[1.4fr_1fr_1fr_1fr] mb-12">
-            <div>
+          <div className="grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-3 lg:grid-cols-[1.3fr_0.9fr_0.9fr_0.9fr_0.9fr_0.8fr] mb-12">
+            <div className="col-span-2 md:col-span-3 lg:col-span-1">
               <a href="/" className="flex items-center gap-2 mb-3">
                 <span className="inline-block w-3.5 h-6 border-2 border-orange border-r-0" />
                 <span className="text-lg font-medium text-white tracking-tight">Billora</span>
               </a>
-              <p className="text-sm text-[#AEB8E0] leading-relaxed max-w-xs">
+              <p className="text-sm text-[#AEB8E0] leading-relaxed max-w-xs mb-5">
                 Premium invoicing and billing for freelancers, agencies, and small businesses.
               </p>
+
+              <p className="text-xs tracking-wide uppercase text-[#7C89C2] mb-2.5">
+                Product news, occasionally
+              </p>
+              {subscribed ? (
+                <p className="flex items-center gap-1.5 text-sm text-white">
+                  <IconCheck size={15} className="text-orange" />
+                  You&apos;re on the list.
+                </p>
+              ) : (
+                <form onSubmit={handleSubscribe} className="flex gap-1.5 max-w-xs mb-6">
+                  <input
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@company.com"
+                    className="min-w-0 flex-1 text-sm bg-white/5 border border-white/15 rounded-md px-3 py-2 text-white placeholder:text-[#7C89C2] outline-none focus:border-orange transition-colors"
+                  />
+                  <button
+                    type="submit"
+                    aria-label="Subscribe"
+                    className="flex-shrink-0 bg-orange text-white rounded-md px-3 hover:opacity-90 transition-opacity"
+                  >
+                    <IconArrowRight size={16} />
+                  </button>
+                </form>
+              )}
+
+              <div className="flex items-center gap-3">
+                {SOCIALS.map((s) => (
+                  <a
+                    key={s.label}
+                    href={s.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={s.label}
+                    className="text-[#8FA0D8] hover:text-white transition-colors"
+                  >
+                    <s.icon size={17} />
+                  </a>
+                ))}
+              </div>
             </div>
 
             {FOOTER_COLUMNS.map((col) => (

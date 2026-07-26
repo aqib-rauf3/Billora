@@ -1,9 +1,82 @@
 // Get/update/delete a single customer
-// TODO: connect to Prisma (src/lib/prisma.ts) once schema is migrated to Neon
-// Methods to implement: GET, PATCH, DELETE
+// Methods: GET, PATCH, DELETE
 
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
+import { prisma } from "@/lib/prisma";
+import { getSessionUserId, unauthorized } from "@/lib/apiAuth";
 
-export async function GET(req: NextRequest) {
-  return NextResponse.json({ message: "TODO: implement Get/update/delete a single customer" });
+// Next.js 15: dynamic route params are async now (a Promise), not a plain
+// object like in Next 14 — every [id] route handler below awaits it.
+type RouteContext = { params: Promise<{ id: string }> };
+
+const updateSchema = z.object({
+  name: z.string().trim().min(1, "Name is required.").optional(),
+  email: z
+    .string()
+    .trim()
+    .email("Enter a valid email address.")
+    .optional()
+    .or(z.literal("")),
+});
+
+async function findOwnedCustomer(id: string, userId: string) {
+  return prisma.customer.findFirst({ where: { id, userId } });
+}
+
+export async function GET(_req: NextRequest, { params }: RouteContext) {
+  const { id } = await params;
+  const userId = await getSessionUserId();
+  if (!userId) return unauthorized();
+
+  const customer = await findOwnedCustomer(id, userId);
+  if (!customer) return NextResponse.json({ error: "Customer not found." }, { status: 404 });
+
+  return NextResponse.json({ customer });
+}
+
+export async function PATCH(req: NextRequest, { params }: RouteContext) {
+  const { id } = await params;
+  const userId = await getSessionUserId();
+  if (!userId) return unauthorized();
+
+  const existing = await findOwnedCustomer(id, userId);
+  if (!existing) return NextResponse.json({ error: "Customer not found." }, { status: 404 });
+
+  let body: unknown;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
+  }
+
+  const parsed = updateSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: parsed.error.issues[0]?.message ?? "Invalid input." },
+      { status: 400 }
+    );
+  }
+
+  const customer = await prisma.customer.update({
+    where: { id },
+    data: {
+      ...(parsed.data.name !== undefined && { name: parsed.data.name }),
+      ...(parsed.data.email !== undefined && { email: parsed.data.email || null }),
+    },
+  });
+
+  return NextResponse.json({ customer });
+}
+
+export async function DELETE(_req: NextRequest, { params }: RouteContext) {
+  const { id } = await params;
+  const userId = await getSessionUserId();
+  if (!userId) return unauthorized();
+
+  const existing = await findOwnedCustomer(id, userId);
+  if (!existing) return NextResponse.json({ error: "Customer not found." }, { status: 404 });
+
+  await prisma.customer.delete({ where: { id } });
+  return NextResponse.json({ success: true });
 }

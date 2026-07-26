@@ -43,6 +43,14 @@ export default function Navbar() {
   const navRef = useRef<HTMLElement>(null);
   const pathname = usePathname();
   const isHome = pathname === "/";
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 24);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   // Close any open dropdown on outside click / Escape (accessibility, per UI_RULES.md)
   useEffect(() => {
@@ -81,7 +89,11 @@ export default function Navbar() {
   return (
     <nav
       ref={navRef}
-      className="sticky top-0 z-50 flex items-center justify-between px-7 py-4 bg-surface/90 backdrop-blur border-b border-border"
+      className={`sticky top-0 z-50 flex items-center justify-between px-7 py-4 border-b transition-all duration-300 ${
+        scrolled
+          ? "bg-surface/95 backdrop-blur-xl border-border shadow-[0_4px_24px_-8px_rgba(11,37,69,0.15)]"
+          : "bg-surface/70 backdrop-blur-sm border-transparent shadow-none"
+      }`}
     >
       <a
         href={isHome ? "#hero" : "/"}
@@ -134,9 +146,13 @@ export default function Navbar() {
 
         <a
           href="/login"
-          className="bg-navy text-white text-sm rounded-md px-4 py-2 hover:bg-navyLight hover:shadow-md hover:-translate-y-px transition-all duration-200"
+          className="relative overflow-hidden group/cta bg-navy text-white text-sm rounded-md px-4 py-2 hover:bg-navyLight hover:shadow-md hover:-translate-y-px transition-all duration-200"
         >
-          Try it free
+          <span className="relative z-10">Try it free</span>
+          <span
+            aria-hidden
+            className="absolute inset-y-0 -left-1/2 w-1/3 -skew-x-12 bg-white/25 -translate-x-[200%] group-hover/cta:translate-x-[400%] transition-transform duration-700 ease-out"
+          />
         </a>
       </div>
 

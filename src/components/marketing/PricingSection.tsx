@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { IconCheck } from "@tabler/icons-react";
 import FadeInSection from "@/components/motion/FadeInSection";
 
@@ -60,10 +61,10 @@ export default function PricingSection() {
             className="w-9 h-5 rounded-full bg-navy relative transition-colors"
             aria-label="Toggle yearly billing"
           >
-            <span
-              className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-all ${
-                yearly ? "right-0.5" : "left-0.5"
-              }`}
+            <motion.span
+              className="absolute top-0.5 w-4 h-4 bg-white rounded-full"
+              animate={{ left: yearly ? "18px" : "2px" }}
+              transition={{ type: "spring", stiffness: 500, damping: 30 }}
             />
           </button>
           <span className={`text-sm ${yearly ? "text-ink font-medium" : "text-text"}`}>Yearly</span>
@@ -76,7 +77,9 @@ export default function PricingSection() {
           <FadeInSection key={plan.name} delay={i * 0.1}>
             <div
               className={`bg-surface rounded-xl p-6 h-full relative ${
-                plan.highlight ? "border-2 border-orange" : "border border-border"
+                plan.highlight
+                  ? "border-2 border-orange animate-[pricing-breathe_3.5s_ease-in-out_infinite] motion-reduce:animate-none"
+                  : "border border-border"
               }`}
             >
               {plan.highlight && (
@@ -86,21 +89,33 @@ export default function PricingSection() {
               )}
               <p className="text-sm font-medium text-ink mb-1">{plan.name}</p>
               <p className="text-xs text-muted mb-4">{plan.tagline}</p>
-              <p className="mb-5">
-                <span className="text-[28px] font-medium text-ink">
-                  Rs. {(yearly ? plan.yearly : plan.monthly).toLocaleString()}
-                </span>
-                <span className="text-xs text-muted"> /month</span>
+              <p className="mb-5 h-9 overflow-hidden">
+                <AnimatePresence mode="wait" initial={false}>
+                  <motion.span
+                    key={yearly ? "yearly" : "monthly"}
+                    initial={{ y: 14, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    exit={{ y: -14, opacity: 0 }}
+                    transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                    className="inline-block"
+                  >
+                    <span className="text-[28px] font-medium text-ink">
+                      Rs. {(yearly ? plan.yearly : plan.monthly).toLocaleString()}
+                    </span>
+                    <span className="text-xs text-muted"> /month</span>
+                  </motion.span>
+                </AnimatePresence>
               </p>
-              <button
-                className={`w-full rounded-md py-2.5 text-sm mb-5 transition-colors ${
+              <a
+                href="/login"
+                className={`block text-center w-full rounded-md py-2.5 text-sm mb-5 transition-colors ${
                   plan.highlight
                     ? "bg-navy text-white hover:bg-navyLight"
                     : "bg-surface border border-[#C7D2F0] dark:border-[#2A3555] text-ink hover:bg-bg"
                 }`}
               >
                 {plan.monthly === 0 ? "Start free" : "Start free trial"}
-              </button>
+              </a>
               <div className="text-xs text-text space-y-2.5">
                 {plan.features.map((f) => (
                   <div key={f} className="flex items-center gap-1.5">

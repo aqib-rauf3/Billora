@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion, type Variants } from "framer-motion";
 import { IconCheck, IconTrendingUp } from "@tabler/icons-react";
 import { useCountUp } from "@/hooks/useCountUp";
+import { useTypewriter } from "@/hooks/useTypewriter";
 
 // Hero "live invoice" animation — Reference: uploaded phone-search reference video
 // (reused mechanics: staggered reveal, count-up, glow pop, floating badges),
@@ -15,13 +16,55 @@ const LINE_ITEMS = [
 ];
 const TOTAL = 69300;
 const CYCLE_MS = 7000;
+const TYPE_SPEED = 24;
+// Second item starts typing once the first has finished (length-aware, not
+// a fixed guess) so the sequence never looks like it's racing ahead of itself.
+const ITEM_START_MS = [300, 300 + LINE_ITEMS[0].label.length * TYPE_SPEED + 250];
+const TOTAL_START_MS =
+  ITEM_START_MS[1] + LINE_ITEMS[1].label.length * TYPE_SPEED + 350;
+
+function TypedLabel({
+  text,
+  cycle,
+  startDelay,
+  reduceMotion,
+}: {
+  text: string;
+  cycle: number;
+  startDelay: number;
+  reduceMotion: boolean;
+}) {
+  const [active, setActive] = useState(reduceMotion);
+
+  useEffect(() => {
+    if (reduceMotion) {
+      setActive(true);
+      return;
+    }
+    setActive(false);
+    const t = setTimeout(() => setActive(true), startDelay);
+    return () => clearTimeout(t);
+  }, [cycle, startDelay, reduceMotion]);
+
+  const shown = useTypewriter(text, active, cycle, TYPE_SPEED, reduceMotion);
+  const done = shown.length >= text.length;
+
+  return (
+    <span>
+      {shown}
+      {!reduceMotion && !done && active && (
+        <span className="inline-block w-[2px] h-[10px] bg-orange ml-0.5 align-middle animate-pulse" />
+      )}
+    </span>
+  );
+}
 
 const itemVariants: Variants = {
   hidden: { opacity: 0, y: 10 },
   visible: (i: number) => ({
     opacity: 1,
     y: 0,
-    transition: { delay: 0.5 + i * 0.15, duration: 0.4, ease: [0.22, 1, 0.36, 1] },
+    transition: { delay: 0.15 + i * 0.08, duration: 0.35, ease: [0.22, 1, 0.36, 1] },
   }),
 };
 
@@ -40,9 +83,9 @@ export default function HeroInvoiceMockup() {
       setShowBadges(true);
       return;
     }
-    const t1 = setTimeout(() => setShowTotal(true), 900);
-    const t2 = setTimeout(() => setShowPaid(true), 1900);
-    const t3 = setTimeout(() => setShowBadges(true), 2300);
+    const t1 = setTimeout(() => setShowTotal(true), TOTAL_START_MS);
+    const t2 = setTimeout(() => setShowPaid(true), TOTAL_START_MS + 1000);
+    const t3 = setTimeout(() => setShowBadges(true), TOTAL_START_MS + 1400);
     return () => {
       clearTimeout(t1);
       clearTimeout(t2);
@@ -150,7 +193,12 @@ export default function HeroInvoiceMockup() {
                 animate="visible"
                 className="flex justify-between text-xs text-text"
               >
-                <span>{item.label}</span>
+                <TypedLabel
+                  text={item.label}
+                  cycle={cycle}
+                  startDelay={ITEM_START_MS[i]}
+                  reduceMotion={reduceMotion}
+                />
                 <span className="font-mono">{item.amount.toLocaleString()}</span>
               </motion.div>
             ))}
@@ -165,9 +213,22 @@ export default function HeroInvoiceMockup() {
             initial={{ opacity: 0, y: -6 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 0.4 }}
-            className="absolute -top-2.5 -right-2.5 bg-orange text-white text-xs px-2.5 py-1.5 rounded-lg"
+            className="absolute -top-2.5 -right-2.5"
           >
-            ✨ polished
+            <motion.span
+              animate={{
+                scale: [1, 1.07, 1],
+                boxShadow: [
+                  "0 0 0 0 rgba(255,75,54,0.35)",
+                  "0 0 0 6px rgba(255,75,54,0)",
+                  "0 0 0 0 rgba(255,75,54,0)",
+                ],
+              }}
+              transition={{ delay: 1.1, duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
+              className="block bg-orange text-white text-xs px-2.5 py-1.5 rounded-lg"
+            >
+              ✨ polished
+            </motion.span>
           </motion.div>
         </motion.div>
       </AnimatePresence>

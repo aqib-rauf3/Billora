@@ -14,15 +14,19 @@ import PageLoader from "@/components/marketing/PageLoader";
 import StackedPanel from "@/components/motion/StackedPanel";
 import ScrollProgress from "@/components/motion/ScrollProgress";
 import Hero from "@/components/marketing/Hero";
+import LogoCloud from "@/components/marketing/LogoCloud";
 import StatsStrip from "@/components/marketing/StatsStrip";
 import FeaturesGrid from "@/components/marketing/FeaturesGrid";
+import ProductDashboardPreview from "@/components/marketing/ProductDashboardPreview";
 import CasesSection from "@/components/marketing/CasesSection";
 import FreeToolsStrip from "@/components/marketing/FreeToolsStrip";
+import Testimonials from "@/components/marketing/Testimonials";
 import PricingSection from "@/components/marketing/PricingSection";
 import FAQSection from "@/components/marketing/FAQSection";
 import AboutSection from "@/components/marketing/AboutSection";
 import ContactSection from "@/components/marketing/ContactSection";
 import FooterCTA from "@/components/marketing/FooterCTA";
+import StickyCTA from "@/components/marketing/StickyCTA";
 
 const PANELS = [
   { id: "hero", label: "Home" },
@@ -43,11 +47,13 @@ export default function HomePage() {
       <StackedPanel id="hero" index={1} roundedTop={false}>
         <Hero />
       </StackedPanel>
-      <StackedPanel id="stats" index={2}>
+      <StackedPanel id="stats" index={2} bufferVh={4}>
+        <LogoCloud />
         <StatsStrip />
       </StackedPanel>
       <StackedPanel id="features" index={3}>
         <FeaturesGrid />
+        <ProductDashboardPreview />
       </StackedPanel>
       <StackedPanel id="about" index={4}>
         <AboutSection />
@@ -59,12 +65,15 @@ export default function HomePage() {
       {/* Normal scroll flow — forms/tables shouldn't be scroll-jacked */}
       <div className="relative bg-bg" style={{ zIndex: 6 }}>
         <FreeToolsStrip />
+        <Testimonials />
         <PricingSection />
         <FAQSection />
         <ContactSection />
         <FooterCTA />
         <Footer />
       </div>
+
+      <StickyCTA />
     </main>
   );
 }

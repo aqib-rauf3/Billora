@@ -9,9 +9,10 @@
 // instead of a balance screen. On mobile the dark panel (with the phone
 // mockup) stacks above the form instead of disappearing, so the "Billora
 // dashboard on a phone" visual stays visible on small screens too.
-// Auth logic unchanged: /api/auth/* is still a TODO stub per
-// DEVELOPMENT_RULES.md, so submission simulates the request
-// (validation -> loading -> success), same as before.
+//
+// Auth logic: real now. Signup POSTs to /api/auth/signup (Prisma + bcrypt),
+// then both signup and login hand off to next-auth's
+// signIn("credentials", ...) — see src/lib/auth.ts.
 //
 // Phone mockup: upgraded from a CSS-only mockup to the real 3D model
 // (public/models/iphone-17-pro-max.glb) rendered with react-three-fiber.
@@ -22,7 +23,9 @@
 // (WebGL needs the browser) and a skeleton fallback while it loads, per
 // MOTION_SYSTEM.md's "skeleton loaders preferred, avoid blank pages" rule.
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
 import dynamic from "next/dynamic";
 import {
@@ -48,6 +51,7 @@ type Mode = "login" | "signup";
 type Status = "idle" | "loading" | "success" | "error";
 
 export default function LoginSignupPage() {
+  const router = useRouter();
   const [mode, setMode] = useState<Mode>("login");
   const [status, setStatus] = useState<Status>("idle");
   const [showPassword, setShowPassword] = useState(false);
@@ -78,11 +82,60 @@ export default function LoginSignupPage() {
 
     setStatus("loading");
 
-    // TODO: replace with a real call once /api/auth/login and
-    // /api/auth/signup are wired to Prisma + NextAuth (DEVELOPMENT_RULES.md).
-    await new Promise((resolve) => setTimeout(resolve, 900));
-    setStatus("success");
+    try {
+      // Signup first creates the User row (hashed password, via Prisma) —
+      // then, either way, next-auth's own credentials flow does the actual
+      // sign-in and sets the session cookie. See src/lib/auth.ts and
+      // src/app/api/auth/signup/route.ts.
+      if (mode === "signup") {
+        const res = await fetch("/api/auth/signup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, email, password }),
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          setError(data.error ?? "Something went wrong. Please try again.");
+          setStatus("error");
+          return;
+        }
+      }
+
+      const result = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      });
+
+      if (result?.error) {
+        setError(
+          mode === "signup"
+            ? "Account created — but sign-in failed. Try logging in below."
+            : "Incorrect email or password."
+        );
+        setStatus("error");
+        return;
+      }
+
+      setStatus("success");
+    } catch {
+      setError("Something went wrong. Please check your connection and try again.");
+      setStatus("error");
+    }
   };
+
+  // There's no real session yet (backend is still a TODO stub), but the
+  // app shell (Sidebar/AppTopBar) is built — so once the form itself has
+  // validated and "succeeded", send the user straight into the app instead
+  // of leaving them stranded on a static success message. Short delay so
+  // the checkmark is actually seen before the page changes; the button
+  // below lets an impatient user skip the wait.
+  useEffect(() => {
+    if (status !== "success") return;
+    const timer = setTimeout(() => router.push("/dashboard"), 1400);
+    return () => clearTimeout(timer);
+  }, [status, router]);
 
   return (
     <main className="min-h-screen bg-bg flex items-center justify-center md:p-8">
@@ -176,10 +229,17 @@ export default function LoginSignupPage() {
                   <p className="text-sm font-medium text-ink mb-1">
                     {mode === "login" ? "Logged in" : "Account created"}
                   </p>
-                  <p className="text-xs text-muted max-w-[260px]">
-                    The dashboard isn&apos;t wired up yet — this confirms the form itself is
-                    working end to end.
+                  <p className="text-xs text-muted max-w-[260px] mb-4">
+                    Taking you to your dashboard&hellip;
                   </p>
+                  <button
+                    type="button"
+                    onClick={() => router.push("/dashboard")}
+                    className="inline-flex items-center gap-1.5 text-sm text-navy dark:text-[#8FA9E8] font-medium hover:underline"
+                  >
+                    Go now
+                    <IconArrowRight size={14} />
+                  </button>
                 </motion.div>
               ) : (
                 <motion.form

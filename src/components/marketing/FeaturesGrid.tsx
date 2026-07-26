@@ -65,7 +65,10 @@ export default function FeaturesGrid() {
         {FEATURES.map((f, i) => {
           const content = (
             <>
-              <f.icon size={22} className="text-orange" />
+              <f.icon
+                size={22}
+                className="text-orange transition-transform duration-300 group-hover:scale-110 group-hover:rotate-[-6deg]"
+              />
               <p className="text-sm font-medium text-ink mt-2.5 mb-1 flex items-center gap-1.5">
                 {f.title}
                 {f.href && (
@@ -81,16 +84,12 @@ export default function FeaturesGrid() {
 
           return (
             <FadeInSection key={f.title} delay={i * 0.08} className="h-full">
-              {f.href ? (
-                <GlowCard
-                  href={f.href}
-                  className="group block bg-surface rounded-lg p-5 h-full border border-transparent hover:border-[#C7D2F0] dark:hover:border-[#2A3555] hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
-                >
-                  {content}
-                </GlowCard>
-              ) : (
-                <div className="bg-surface rounded-lg p-5 h-full">{content}</div>
-              )}
+              <GlowCard
+                href={f.href}
+                className="block bg-surface rounded-lg p-5 h-full border border-transparent hover:border-[#C7D2F0] dark:hover:border-[#2A3555] hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
+              >
+                {content}
+              </GlowCard>
             </FadeInSection>
           );
         })}

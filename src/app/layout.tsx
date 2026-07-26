@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import ThemeProvider from "@/components/layout/ThemeProvider";
+import AuthProvider from "@/components/layout/AuthProvider";
 import ConditionalNeonGlow from "@/components/marketing/ConditionalNeonGlow";
+import ConditionalCustomCursor from "@/components/marketing/ConditionalCustomCursor";
 
 export const metadata: Metadata = {
   title: "Billora — Invoicing for freelancers",
@@ -21,8 +23,11 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className="font-sans bg-bg text-text">
         <ThemeProvider>
-          <ConditionalNeonGlow />
-          {children}
+          <AuthProvider>
+            <ConditionalNeonGlow />
+            <ConditionalCustomCursor />
+            {children}
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>
