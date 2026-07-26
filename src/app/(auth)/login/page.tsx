@@ -230,7 +230,9 @@ export default function LoginSignupPage() {
                     {mode === "login" ? "Logged in" : "Account created"}
                   </p>
                   <p className="text-xs text-muted max-w-[260px] mb-4">
-                    Taking you to your dashboard&hellip;
+                    {mode === "login"
+                      ? "Taking you to your dashboard\u2026"
+                      : "Check your email to verify your account\u2026"}
                   </p>
                   <button
                     type="button"
@@ -303,7 +305,7 @@ export default function LoginSignupPage() {
                   </div>
 
                   {mode === "login" && (
-                    <a href="#" className="text-xs text-orange hover:underline">
+                    <a href="/forgot-password" className="text-xs text-orange hover:underline">
                       Forgot password?
                     </a>
                   )}

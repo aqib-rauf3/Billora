@@ -24,6 +24,13 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
+  // Mandatory email verification — signed in but hasn't clicked the
+  // verification link yet, so bounce to the "check your email" screen
+  // instead of letting them into the app.
+  if (!token.emailVerified) {
+    return NextResponse.redirect(new URL("/verify-email?pending=1", req.url));
+  }
+
   return NextResponse.next();
 }
 

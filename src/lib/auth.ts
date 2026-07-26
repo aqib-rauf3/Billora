@@ -34,21 +34,35 @@ export const authOptions: NextAuthOptions = {
 
         // Only the fields NextAuth needs to build the JWT — never return
         // the password hash, even internally.
-        return { id: user.id, name: user.name, email: user.email };
+        return {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          emailVerified: !!user.emailVerified,
+        };
       },
     }),
   ],
   callbacks: {
     async jwt({ token, user, trigger, session }) {
-      if (user) token.id = user.id;
-      // Triggered by the client calling useSession().update({ name }) after
-      // a successful PATCH /api/user — keeps the navbar/account menu in
-      // sync with a profile-name edit without requiring a re-login.
+      if (user) {
+        token.id = user.id;
+        token.emailVerified = !!user.emailVerified;
+      }
+      // Triggered by the client calling useSession().update({ ... }) after
+      // a successful PATCH /api/user, or after the verify-email page
+      // confirms a token — keeps the JWT in sync without a re-login.
       if (trigger === "update" && session?.name) token.name = session.name;
+      if (trigger === "update" && typeof session?.emailVerified === "boolean") {
+        token.emailVerified = session.emailVerified;
+      }
       return token;
     },
     async session({ session, token }) {
-      if (session.user) session.user.id = token.id as string;
+      if (session.user) {
+        session.user.id = token.id as string;
+        session.user.emailVerified = token.emailVerified;
+      }
       return session;
     },
   },

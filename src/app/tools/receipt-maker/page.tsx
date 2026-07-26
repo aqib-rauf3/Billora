@@ -12,8 +12,10 @@ import Footer from "@/components/layout/Footer";
 import FadeInSection from "@/components/motion/FadeInSection";
 import LineItemsEditor from "@/components/tools/LineItemsEditor";
 import DocumentPreviewCard from "@/components/tools/DocumentPreviewCard";
+import TemplatePicker from "@/components/tools/TemplatePicker";
 import { useLineItems } from "@/hooks/useLineItems";
 import { generateDocumentPdf } from "@/lib/generateDocumentPdf";
+import { DEFAULT_TEMPLATE_ID, TemplateId } from "@/lib/invoiceTemplates";
 
 const inputClass =
   "w-full text-sm border border-border rounded-md px-3 py-2 outline-none focus:border-navy dark:focus:border-[#5B7FDB] bg-surface";
@@ -23,6 +25,7 @@ const PAYMENT_METHODS = ["Cash", "Bank transfer", "Card", "Other"];
 
 export default function ReceiptMakerTool() {
   const { items, update, add, remove, subtotal } = useLineItems(1);
+  const [templateId, setTemplateId] = useState<TemplateId>(DEFAULT_TEMPLATE_ID);
 
   const [fromName, setFromName] = useState("");
   const [fromDetail, setFromDetail] = useState("");
@@ -137,6 +140,10 @@ export default function ReceiptMakerTool() {
               />
             </div>
 
+            <div className="mb-5">
+              <TemplatePicker value={templateId} onChange={setTemplateId} />
+            </div>
+
             <div className="mb-6">
               <label className={labelClass}>Notes</label>
               <textarea
@@ -162,6 +169,7 @@ export default function ReceiptMakerTool() {
                     totalLabel: "Amount received",
                     notes,
                     extraLine: { label: "Payment method", value: paymentMethod },
+                    templateId,
                   })
                 }
                 className="flex-1 flex items-center justify-center gap-2 bg-navy text-white rounded-md py-2.5 text-sm hover:bg-navyLight transition-colors"
@@ -194,6 +202,7 @@ export default function ReceiptMakerTool() {
                 totalLabel="Amount received"
                 notes={notes}
                 extraLine={{ label: "Payment method", value: paymentMethod }}
+                templateId={templateId}
               />
             </div>
           </FadeInSection>

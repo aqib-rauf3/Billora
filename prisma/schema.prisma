@@ -19,6 +19,16 @@ model User {
   invoices  Invoice[]
   estimates Estimate[]
   expenses  Expense[]
+
+  // Email verification — null until the user clicks the emailed link.
+  // Mandatory: the app middleware blocks (app) routes while this is null.
+  emailVerified            DateTime?
+  verificationToken        String?   @unique
+  verificationTokenExpiry  DateTime?
+
+  // Forgot / reset password
+  resetToken       String?   @unique
+  resetTokenExpiry DateTime?
 }
 
 model Customer {

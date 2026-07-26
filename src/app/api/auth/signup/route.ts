@@ -5,6 +5,8 @@ import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import { sendMail, appUrl } from "@/lib/mailer";
+import { generateToken, VERIFICATION_TOKEN_TTL_MS } from "@/lib/tokens";
 
 const signupSchema = z.object({
   name: z.string().trim().min(2, "Please enter your full name."),
@@ -44,14 +46,32 @@ export async function POST(req: NextRequest) {
   }
 
   const hashedPassword = await bcrypt.hash(password, 10);
+  const verificationToken = generateToken();
+  const verificationTokenExpiry = new Date(Date.now() + VERIFICATION_TOKEN_TTL_MS);
 
   const user = await prisma.user.create({
-    data: { name, email, password: hashedPassword, business },
+    data: {
+      name,
+      email,
+      password: hashedPassword,
+      business,
+      verificationToken,
+      verificationTokenExpiry,
+    },
     select: { id: true, name: true, email: true, business: true },
+  });
+
+  await sendMail({
+    to: user.email,
+    subject: "Verify your Billora email",
+    actionLabel: "Verify link",
+    actionUrl: appUrl(`/verify-email?token=${verificationToken}`),
   });
 
   // Password never leaves this route. The client signs the user in
   // separately via next-auth's signIn("credentials", ...) right after this
-  // succeeds — see src/app/(auth)/login/page.tsx.
+  // succeeds — see src/app/(auth)/login/page.tsx. The account exists but
+  // is unverified; middleware.ts blocks (app) routes until the link above
+  // is clicked.
   return NextResponse.json({ user }, { status: 201 });
 }

@@ -12,8 +12,10 @@ import Footer from "@/components/layout/Footer";
 import FadeInSection from "@/components/motion/FadeInSection";
 import LineItemsEditor from "@/components/tools/LineItemsEditor";
 import DocumentPreviewCard from "@/components/tools/DocumentPreviewCard";
+import TemplatePicker from "@/components/tools/TemplatePicker";
 import { useLineItems } from "@/hooks/useLineItems";
 import { generateDocumentPdf } from "@/lib/generateDocumentPdf";
+import { DEFAULT_TEMPLATE_ID, TemplateId } from "@/lib/invoiceTemplates";
 
 const inputClass =
   "w-full text-sm border border-border rounded-md px-3 py-2 outline-none focus:border-navy dark:focus:border-[#5B7FDB] bg-surface";
@@ -21,6 +23,7 @@ const labelClass = "text-xs text-text block mb-1.5";
 
 export default function EstimateGeneratorTool() {
   const { items, update, add, remove, subtotal } = useLineItems(2);
+  const [templateId, setTemplateId] = useState<TemplateId>(DEFAULT_TEMPLATE_ID);
 
   const [fromName, setFromName] = useState("");
   const [fromDetail, setFromDetail] = useState("");
@@ -130,6 +133,10 @@ export default function EstimateGeneratorTool() {
               />
             </div>
 
+            <div className="mb-5">
+              <TemplatePicker value={templateId} onChange={setTemplateId} />
+            </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
               <div>
                 <label className={labelClass}>Tax (%)</label>
@@ -171,6 +178,7 @@ export default function EstimateGeneratorTool() {
                     taxPercent,
                     totalLabel: "Estimated total",
                     notes,
+                    templateId,
                   })
                 }
                 className="flex-1 flex items-center justify-center gap-2 bg-navy text-white rounded-md py-2.5 text-sm hover:bg-navyLight transition-colors"
@@ -206,6 +214,7 @@ export default function EstimateGeneratorTool() {
                 taxPercent={taxPercent}
                 totalLabel="Estimated total"
                 notes={notes}
+                templateId={templateId}
               />
             </div>
           </FadeInSection>

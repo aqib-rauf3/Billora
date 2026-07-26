@@ -77,9 +77,12 @@ export default function FeaturePageLayout({
             >
               {primaryCta.label}
             </a>
-            <button className="bg-surface border border-[#C7D2F0] dark:border-[#2A3555] text-ink rounded-md px-6 py-3 text-sm hover:bg-bg transition-colors">
+            <a
+              href="#how-it-works"
+              className="bg-surface border border-[#C7D2F0] dark:border-[#2A3555] text-ink rounded-md px-6 py-3 text-sm hover:bg-bg transition-colors"
+            >
               {secondaryCtaLabel}
-            </button>
+            </a>
           </div>
         </FadeInSection>
 
@@ -87,7 +90,7 @@ export default function FeaturePageLayout({
       </section>
 
       {steps && steps.length > 0 && (
-        <section className="px-7 pb-16 max-w-6xl mx-auto">
+        <section id="how-it-works" className="px-7 pb-16 max-w-6xl mx-auto">
           <FadeInSection>
             <p className="text-xs tracking-wide text-muted uppercase text-center mb-10">
               {stepsLabel}
@@ -205,9 +208,12 @@ export function PreviewCard({
           <span className="font-mono">{totalValue}</span>
         </div>
       )}
-      <button className="w-full bg-navy text-white rounded-md py-2.5 text-sm hover:bg-navyLight transition-colors">
+      <a
+        href="/login"
+        className="block w-full text-center bg-navy text-white rounded-md py-2.5 text-sm hover:bg-navyLight transition-colors"
+      >
         {ctaLabel}
-      </button>
+      </a>
     </div>
   );
 }

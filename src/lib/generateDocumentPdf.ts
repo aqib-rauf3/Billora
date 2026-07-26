@@ -1,5 +1,6 @@
 import { jsPDF } from "jspdf";
 import { LineItem } from "@/hooks/useLineItems";
+import { DEFAULT_TEMPLATE_ID, TemplateId, getTemplate } from "@/lib/invoiceTemplates";
 
 interface PartyBlock {
   label: string;
@@ -25,6 +26,7 @@ export interface DocumentPdfInput {
   totalLabel: string;
   notes?: string;
   extraLine?: { label: string; value: string };
+  templateId?: TemplateId;
 }
 
 // Billora brand palette (matches tailwind.config.ts navy/orange + the
@@ -61,37 +63,104 @@ export function generateDocumentPdf(input: DocumentPdfInput) {
     totalLabel,
     notes,
     extraLine,
+    templateId = DEFAULT_TEMPLATE_ID,
   } = input;
+
+  const template = getTemplate(templateId);
+  const dense = templateId === "compact";
 
   const pdf = new jsPDF({ unit: "pt", format: "a4" });
   const pageWidth = pdf.internal.pageSize.getWidth();
   const margin = 48;
   let y = 56;
 
-  // Header — brand mark (a small bracket, echoing the orange accent used
-  // on-screen) + doc type/number aligned to the right.
-  pdf.setDrawColor(...ORANGE);
-  pdf.setLineWidth(2.2);
-  pdf.line(margin, y - 16, margin, y + 2);
-  pdf.line(margin, y - 16, margin + 11, y - 16);
+  // Header — 5 treatments matching DocumentPreviewCard's headerStyle:
+  // "mark" (default bracket + wordmark), "hairline" (grayscale, no
+  // color), "band" / "block" (filled color bar, drawn as a full-width
+  // rect before the margin math starts), "compact" (tighter, one line).
+  if (template.headerStyle === "band") {
+    pdf.setFillColor(...template.accentRgb);
+    pdf.rect(0, 0, pageWidth, 74, "F");
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(16);
+    pdf.setTextColor(255, 255, 255);
+    pdf.text("Billora", margin, 44);
+    pdf.setFontSize(11);
+    pdf.text(docTypeLabel, pageWidth - margin, 38, { align: "right" });
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(9);
+    pdf.text(docNumber || "—", pageWidth - margin, 52, { align: "right" });
+    y = 100;
+  } else if (template.headerStyle === "block") {
+    pdf.setFillColor(...NAVY);
+    pdf.rect(0, 0, pageWidth, 84, "F");
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(9);
+    pdf.setTextColor(255, 255, 255);
+    pdf.text("Billora", margin, 34);
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(22);
+    pdf.text(docTypeLabel, margin, 62);
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(9);
+    pdf.text(docNumber || "—", pageWidth - margin, 62, { align: "right" });
+    y = 110;
+  } else if (template.headerStyle === "hairline") {
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(13);
+    pdf.setTextColor(30, 34, 44);
+    pdf.text("Billora", margin, y);
+    pdf.setFontSize(9);
+    pdf.text(docTypeLabel.toUpperCase(), pageWidth - margin, y, { align: "right" });
+    y += 12;
+    pdf.setTextColor(120, 124, 132);
+    pdf.setFontSize(8.5);
+    pdf.text(docNumber || "—", pageWidth - margin, y, { align: "right" });
+    y += 10;
+    pdf.setDrawColor(60, 60, 60);
+    pdf.setLineWidth(0.6);
+    pdf.line(margin, y, pageWidth - margin, y);
+    y += 30;
+  } else if (template.headerStyle === "compact") {
+    pdf.setDrawColor(...template.accentRgb);
+    pdf.setLineWidth(1.6);
+    pdf.line(margin, y - 10, margin, y);
+    pdf.line(margin, y - 10, margin + 8, y - 10);
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(12);
+    pdf.setTextColor(...NAVY);
+    pdf.text("Billora", margin + 12, y);
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(8.5);
+    pdf.setTextColor(...MUTED);
+    pdf.text(`${docTypeLabel} · ${docNumber || "—"}`, pageWidth - margin, y, { align: "right" });
+    y += 20;
+  } else {
+    // "mark" — original default header
+    pdf.setDrawColor(...template.accentRgb);
+    pdf.setLineWidth(2.2);
+    pdf.line(margin, y - 16, margin, y + 2);
+    pdf.line(margin, y - 16, margin + 11, y - 16);
 
-  pdf.setFont("helvetica", "bold");
-  pdf.setFontSize(16);
-  pdf.setTextColor(...NAVY);
-  pdf.text("Billora", margin, y + 14);
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(16);
+    pdf.setTextColor(...NAVY);
+    pdf.text("Billora", margin, y + 14);
 
-  pdf.setFontSize(12);
-  pdf.text(docTypeLabel, pageWidth - margin, y, { align: "right" });
-  pdf.setFont("helvetica", "normal");
-  pdf.setFontSize(9);
-  pdf.setTextColor(...MUTED);
-  pdf.text(docNumber || "—", pageWidth - margin, y + 14, { align: "right" });
+    pdf.setFontSize(12);
+    pdf.text(docTypeLabel, pageWidth - margin, y, { align: "right" });
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(9);
+    pdf.setTextColor(...MUTED);
+    pdf.text(docNumber || "—", pageWidth - margin, y + 14, { align: "right" });
 
-  y += 44;
+    y += 44;
+  }
+
   pdf.setDrawColor(...LINE);
   pdf.setLineWidth(0.75);
   pdf.line(margin, y, pageWidth - margin, y);
-  y += 26;
+  y += dense ? 18 : 26;
 
   // From / To — two columns
   const colWidth = (pageWidth - margin * 2 - 24) / 2;
@@ -194,9 +263,21 @@ export function generateDocumentPdf(input: DocumentPdfInput) {
   }
   if (extraLine) totalsRow(extraLine.label, extraLine.value);
 
-  pdf.setDrawColor(...LINE);
-  pdf.line(labelX, y - 4, pageWidth - margin, y - 4);
-  totalsRow(totalLabel, money(total), true);
+  if (dense) {
+    // filled total chip, matching the on-screen compact template
+    pdf.setFillColor(...NAVY);
+    pdf.roundedRect(labelX - 10, y - 14, pageWidth - margin - (labelX - 10), 22, 3, 3, "F");
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(11);
+    pdf.setTextColor(255, 255, 255);
+    pdf.text(totalLabel, labelX, y);
+    pdf.text(money(total), pageWidth - margin - 10, y, { align: "right" });
+    y += 20;
+  } else {
+    pdf.setDrawColor(...LINE);
+    pdf.line(labelX, y - 4, pageWidth - margin, y - 4);
+    totalsRow(totalLabel, money(total), true);
+  }
 
   // Notes
   if (notes && notes.trim()) {

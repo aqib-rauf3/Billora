@@ -7,12 +7,18 @@ declare module "next-auth" {
   interface Session {
     user: {
       id: string;
+      emailVerified: boolean;
     } & DefaultSession["user"];
+  }
+
+  interface User {
+    emailVerified?: boolean;
   }
 }
 
 declare module "next-auth/jwt" {
   interface JWT {
     id: string;
+    emailVerified: boolean;
   }
 }
