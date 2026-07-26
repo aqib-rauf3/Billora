@@ -2,6 +2,12 @@
 // Reference mockup: billora_estimating_page.png
 // Marketing/explainer page with a sample estimate preview
 
+import {
+  IconClick,
+  IconThumbUp,
+  IconTemplate,
+  IconBellRinging,
+} from "@tabler/icons-react";
 import FeaturePageLayout, { PreviewCard } from "@/components/marketing/FeaturePageLayout";
 
 export default function EstimatingPage() {
@@ -13,6 +19,21 @@ export default function EstimatingPage() {
       primaryCta={{ label: "Create an estimate", href: "/login" }}
       secondaryCtaLabel="Watch demo"
       sectionLabel="From quote to cash, faster"
+      stepsLabel="How it works"
+      steps={[
+        {
+          title: "Build the estimate",
+          desc: "Add your line items and scope of work using a reusable template.",
+        },
+        {
+          title: "Client reviews & approves",
+          desc: "They approve or reject with a single tap — no back-and-forth emails.",
+        },
+        {
+          title: "Convert to invoice",
+          desc: "One click turns the approved estimate into a ready-to-send invoice.",
+        },
+      ]}
       preview={
         <PreviewCard
           eyebrow="Estimate #EST-0087"
@@ -28,10 +49,26 @@ export default function EstimatingPage() {
         />
       }
       benefits={[
-        { title: "One-click convert", desc: "Approved estimate becomes an invoice instantly." },
-        { title: "Client e-approval", desc: "Clients approve or reject with a single tap." },
-        { title: "Reusable templates", desc: "Save your line-item sets for repeat project types." },
-        { title: "Expiry reminders", desc: "Nudge clients before the estimate expires." },
+        {
+          title: "One-click convert",
+          desc: "Approved estimate becomes an invoice instantly.",
+          icon: IconClick,
+        },
+        {
+          title: "Client e-approval",
+          desc: "Clients approve or reject with a single tap.",
+          icon: IconThumbUp,
+        },
+        {
+          title: "Reusable templates",
+          desc: "Save your line-item sets for repeat project types.",
+          icon: IconTemplate,
+        },
+        {
+          title: "Expiry reminders",
+          desc: "Nudge clients before the estimate expires.",
+          icon: IconBellRinging,
+        },
       ]}
       ctaHeading="Win more jobs with sharper estimates"
       ctaSubtext="No credit card required. Cancel anytime."

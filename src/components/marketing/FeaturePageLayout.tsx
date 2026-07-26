@@ -1,10 +1,17 @@
-import { ReactNode } from "react";
+import { ComponentType, ReactNode } from "react";
 import { IconCheck } from "@tabler/icons-react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import FadeInSection from "@/components/motion/FadeInSection";
+import GlowCard from "@/components/motion/GlowCard";
 
 export interface FeatureBenefit {
+  title: string;
+  desc: string;
+  icon?: ComponentType<{ size?: number; className?: string }>;
+}
+
+export interface FeatureStep {
   title: string;
   desc: string;
 }
@@ -18,15 +25,22 @@ interface FeaturePageLayoutProps {
   preview: ReactNode;
   sectionLabel: string;
   benefits: FeatureBenefit[];
+  steps?: FeatureStep[];
+  stepsLabel?: string;
   ctaHeading: string;
   ctaSubtext: string;
 }
 
 // Shared layout for the three feature/explainer marketing pages
 // (Online Invoicing, Estimating, Expense Tracking). Each page supplies its
-// own copy + a bespoke preview card; the surrounding hero / benefits grid /
-// closing CTA structure stays identical to keep the design language
-// consistent across all three, per BRAND_GUIDELINES.md and COMPONENT_GUIDE.md.
+// own copy + a bespoke preview card; the surrounding hero / how-it-works /
+// benefits grid / closing CTA structure stays identical to keep the design
+// language consistent across all three, per BRAND_GUIDELINES.md and
+// COMPONENT_GUIDE.md. The optional `steps` section and icon-equipped
+// `benefits` bring these pages in line with the richer design-reference
+// mockups (billora_online_invoicing_page.png etc.), which show a
+// numbered "how it works" walkthrough above the benefit grid rather than
+// jumping straight from hero to bullet list.
 export default function FeaturePageLayout({
   badge,
   title,
@@ -36,6 +50,8 @@ export default function FeaturePageLayout({
   preview,
   sectionLabel,
   benefits,
+  steps,
+  stepsLabel = "How it works",
   ctaHeading,
   ctaSubtext,
 }: FeaturePageLayoutProps) {
@@ -70,6 +86,36 @@ export default function FeaturePageLayout({
         <FadeInSection delay={0.15}>{preview}</FadeInSection>
       </section>
 
+      {steps && steps.length > 0 && (
+        <section className="px-7 pb-16 max-w-6xl mx-auto">
+          <FadeInSection>
+            <p className="text-xs tracking-wide text-muted uppercase text-center mb-10">
+              {stepsLabel}
+            </p>
+          </FadeInSection>
+          <div className="grid md:grid-cols-3 gap-6 relative">
+            {steps.map((s, i) => (
+              <FadeInSection key={s.title} delay={i * 0.1} className="relative">
+                {/* connecting line between step numbers on desktop */}
+                {i < steps.length - 1 && (
+                  <span
+                    aria-hidden
+                    className="hidden md:block absolute top-5 left-[calc(50%+24px)] right-[calc(-50%+24px)] h-px bg-[#E4E9F7] dark:bg-[#232B45]"
+                  />
+                )}
+                <div className="flex flex-col items-center text-center">
+                  <span className="relative z-10 w-10 h-10 rounded-full bg-navy text-white text-sm font-medium flex items-center justify-center mb-4">
+                    {i + 1}
+                  </span>
+                  <p className="text-sm font-medium text-ink mb-1.5">{s.title}</p>
+                  <p className="text-xs text-muted max-w-[220px]">{s.desc}</p>
+                </div>
+              </FadeInSection>
+            ))}
+          </div>
+        </section>
+      )}
+
       <section className="px-7 pb-16 max-w-6xl mx-auto">
         <FadeInSection>
           <p className="text-xs tracking-wide text-muted uppercase text-center mb-6">
@@ -77,14 +123,22 @@ export default function FeaturePageLayout({
           </p>
         </FadeInSection>
         <div className="grid md:grid-cols-2 gap-4">
-          {benefits.map((b, i) => (
-            <FadeInSection key={b.title} delay={i * 0.08}>
-              <div className="bg-surface rounded-lg p-5 h-full">
-                <p className="text-sm font-medium text-ink mb-1">{b.title}</p>
-                <p className="text-xs text-muted">{b.desc}</p>
-              </div>
-            </FadeInSection>
-          ))}
+          {benefits.map((b, i) => {
+            const BenefitIcon = b.icon;
+            return (
+              <FadeInSection key={b.title} delay={i * 0.08}>
+                <GlowCard className="bg-surface rounded-lg p-5 h-full border border-transparent hover:border-[#E4E9F7] dark:hover:border-[#232B45] hover:-translate-y-0.5 transition-all duration-300">
+                  {BenefitIcon && (
+                    <span className="inline-flex items-center justify-center w-9 h-9 rounded-md bg-redBg text-red mb-3">
+                      <BenefitIcon size={18} />
+                    </span>
+                  )}
+                  <p className="text-sm font-medium text-ink mb-1">{b.title}</p>
+                  <p className="text-xs text-muted">{b.desc}</p>
+                </GlowCard>
+              </FadeInSection>
+            );
+          })}
         </div>
       </section>
 

@@ -6,13 +6,14 @@
 // browser's native print dialog (Save as PDF) since there's no backend yet.
 
 import { useState } from "react";
-import { IconPrinter } from "@tabler/icons-react";
+import { IconPrinter, IconFileDownload } from "@tabler/icons-react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import FadeInSection from "@/components/motion/FadeInSection";
 import LineItemsEditor from "@/components/tools/LineItemsEditor";
 import DocumentPreviewCard from "@/components/tools/DocumentPreviewCard";
 import { useLineItems } from "@/hooks/useLineItems";
+import { generateDocumentPdf } from "@/lib/generateDocumentPdf";
 
 const inputClass =
   "w-full text-sm border border-border rounded-md px-3 py-2 outline-none focus:border-navy dark:focus:border-[#5B7FDB] bg-surface";
@@ -45,7 +46,7 @@ export default function InvoiceGeneratorTool() {
           </h1>
           <p className="text-sm text-text mb-8 max-w-lg">
             Fill in the details below and your invoice builds itself on the right. No sign-up
-            needed — print or save as PDF when you&apos;re done.
+            needed — download a branded PDF when you&apos;re done.
           </p>
         </FadeInSection>
 
@@ -152,13 +153,40 @@ export default function InvoiceGeneratorTool() {
               />
             </div>
 
-            <button
-              onClick={() => window.print()}
-              className="w-full flex items-center justify-center gap-2 bg-navy text-white rounded-md py-2.5 text-sm hover:bg-navyLight transition-colors"
-            >
-              <IconPrinter size={16} />
-              Print / Save as PDF
-            </button>
+            <div className="flex gap-3">
+              <button
+                onClick={() =>
+                  generateDocumentPdf({
+                    docTypeLabel: "Invoice",
+                    docNumber: invoiceNumber,
+                    dateFields: [
+                      { label: "Issued", value: issueDate },
+                      { label: "Due", value: dueDate },
+                    ],
+                    from: { label: "From", name: fromName, detail: fromDetail },
+                    to: { label: "Bill to", name: toName, detail: toDetail },
+                    items,
+                    mode: "qty-rate",
+                    subtotal,
+                    taxPercent,
+                    totalLabel: "Total due",
+                    notes,
+                  })
+                }
+                className="flex-1 flex items-center justify-center gap-2 bg-navy text-white rounded-md py-2.5 text-sm hover:bg-navyLight transition-colors"
+              >
+                <IconFileDownload size={16} />
+                Download PDF
+              </button>
+              <button
+                onClick={() => window.print()}
+                aria-label="Print"
+                title="Print"
+                className="bg-surface border border-[#C7D2F0] dark:border-[#2A3555] text-ink rounded-md px-4 py-2.5 text-sm hover:bg-bg transition-colors"
+              >
+                <IconPrinter size={16} />
+              </button>
+            </div>
           </FadeInSection>
 
           <FadeInSection delay={0.1} className="print:block">
