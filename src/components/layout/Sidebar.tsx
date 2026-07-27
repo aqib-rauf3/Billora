@@ -22,6 +22,8 @@ import {
   IconReceipt2,
   IconUsers,
   IconChartBar,
+  IconBox,
+  IconCash,
   IconX,
 } from "@tabler/icons-react";
 
@@ -31,6 +33,9 @@ const NAV_ITEMS = [
   { label: "Estimates", href: "/estimates", icon: IconClipboardText },
   { label: "Expenses", href: "/expenses", icon: IconReceipt2 },
   { label: "Customers", href: "/customers", icon: IconUsers },
+  { label: "Products", href: "/products", icon: IconBox },
+  { label: "Payments", href: "/payments", icon: IconCash },
+  { label: "Reports", href: "/reports", icon: IconChartBar },
 ];
 
 function Logo() {
@@ -70,20 +75,6 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
           </a>
         );
       })}
-
-      {/* Reports has no route yet (ROADMAP.md Phase 7) — shown so the nav
-          matches the reference mockups' full link set, but disabled rather
-          than a dead link. */}
-      <div
-        className="flex items-center gap-2.5 px-3 py-2 rounded-md text-sm text-[#5C6896] cursor-not-allowed select-none"
-        title="Reports — coming soon"
-      >
-        <IconChartBar size={17} className="text-[#3E4A78]" />
-        Reports
-        <span className="ml-auto text-[10px] uppercase tracking-wide bg-white/5 text-[#7C89C2] rounded px-1.5 py-0.5">
-          Soon
-        </span>
-      </div>
     </nav>
   );
 }

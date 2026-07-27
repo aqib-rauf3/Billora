@@ -9,6 +9,7 @@
 //   shouldn't live inside page content itself.
 
 import ThemeToggle from "@/components/layout/ThemeToggle";
+import NotificationBell from "@/components/layout/NotificationBell";
 import AccountMenu from "@/components/layout/AccountMenu";
 import { IconMenu2 } from "@tabler/icons-react";
 
@@ -32,6 +33,7 @@ export default function AppTopBar({ onMenuClick }: { onMenuClick: () => void }) 
 
       <div className="flex items-center gap-3">
         <ThemeToggle />
+        <NotificationBell />
         <AccountMenu />
       </div>
     </header>

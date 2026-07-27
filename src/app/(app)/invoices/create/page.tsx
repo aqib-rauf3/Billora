@@ -7,9 +7,9 @@
 // than rebuilt, per COMPONENT_GUIDE.md). Customer list and the "Save
 // invoice" action are now wired to /api/customers and /api/invoices.
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { IconPrinter, IconCheck, IconLoader2, IconAlertTriangle } from "@tabler/icons-react";
+import { IconDownload, IconCheck, IconLoader2, IconAlertTriangle, IconRepeat } from "@tabler/icons-react";
 import FadeInSection from "@/components/motion/FadeInSection";
 import LineItemsEditor from "@/components/tools/LineItemsEditor";
 import DocumentPreviewCard from "@/components/tools/DocumentPreviewCard";
@@ -18,6 +18,10 @@ import { useLineItems } from "@/hooks/useLineItems";
 import { useApiData } from "@/hooks/useApiData";
 import type { LiveCustomer } from "@/lib/liveData";
 import { DEFAULT_TEMPLATE_ID, TemplateId } from "@/lib/invoiceTemplates";
+import { generateDocumentPdf } from "@/lib/generateDocumentPdf";
+import { RECURRING_INTERVALS, INTERVAL_LABELS, type RecurringInterval } from "@/lib/recurringInterval";
+
+type DiscountType = "percent" | "fixed";
 
 const inputClass =
   "w-full text-sm border border-border rounded-md px-3 py-2 outline-none focus:border-navy dark:focus:border-[#5B7FDB] bg-surface";
@@ -38,10 +42,24 @@ export default function CreateInvoicePage() {
   const [issueDate, setIssueDate] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [taxPercent, setTaxPercent] = useState(0);
+  const [discountType, setDiscountType] = useState<DiscountType>("percent");
+  const [discountValue, setDiscountValue] = useState(0);
   const [notes, setNotes] = useState("Thank you for your business.");
   const [templateId, setTemplateId] = useState<TemplateId>(DEFAULT_TEMPLATE_ID);
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [interval, setInterval] = useState<RecurringInterval>("monthly");
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [saveError, setSaveError] = useState("");
+  const [businessName, setBusinessName] = useState("Your business");
+
+  useEffect(() => {
+    fetch("/api/user")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((body) => {
+        if (body?.user?.business) setBusinessName(body.user.business);
+      })
+      .catch(() => {});
+  }, []);
 
   const customer = useMemo(
     () => customers?.find((c) => c.id === customerId),
@@ -49,39 +67,85 @@ export default function CreateInvoicePage() {
   );
 
   const handleSave = async () => {
-    if (!customer || !issueDate || !dueDate) return;
+    if (!customer) return;
+    if (!isRecurring && (!issueDate || !dueDate)) return;
     setSaveState("saving");
     setSaveError("");
     try {
-      const res = await fetch("/api/invoices", {
+      const url = isRecurring ? "/api/recurring-invoices" : "/api/invoices";
+      const body = isRecurring
+        ? {
+            customerId: customer.id,
+            interval,
+            taxPercent,
+            discountType,
+            discountValue,
+            note: notes,
+            items: items.map((it) => ({ desc: it.description, qty: it.qty, rate: it.rate })),
+          }
+        : {
+            customerId: customer.id,
+            ...(invoiceNumber.trim() && { number: invoiceNumber.trim() }),
+            status: "pending",
+            issueDate,
+            dueDate,
+            taxPercent,
+            discountType,
+            discountValue,
+            note: notes,
+            items: items.map((it) => ({ desc: it.description, qty: it.qty, rate: it.rate })),
+          };
+
+      const res = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          customerId: customer.id,
-          ...(invoiceNumber.trim() && { number: invoiceNumber.trim() }),
-          status: "pending",
-          issueDate,
-          dueDate,
-          taxPercent,
-          note: notes,
-          items: items.map((it) => ({ desc: it.description, qty: it.qty, rate: it.rate })),
-        }),
+        body: JSON.stringify(body),
       });
       if (!res.ok) {
-        const body = await res.json().catch(() => null);
-        throw new Error(body?.error ?? "Couldn't save the invoice.");
+        const resBody = await res.json().catch(() => null);
+        throw new Error(resBody?.error ?? "Couldn't save the invoice.");
       }
       setSaveState("saved");
-      setTimeout(() => router.push("/invoices"), 900);
+      setTimeout(() => router.push(isRecurring ? "/invoices/recurring" : "/invoices"), 900);
     } catch (err) {
       setSaveState("error");
       setSaveError(err instanceof Error ? err.message : "Couldn't save the invoice.");
     }
   };
 
+  const handleDownloadPdf = () => {
+    generateDocumentPdf({
+      docTypeLabel: "Invoice",
+      docNumber: invoiceNumber || "Auto-generated",
+      dateFields: [
+        { label: "Issued", value: issueDate },
+        { label: "Due", value: dueDate },
+      ],
+      from: { label: "From", name: businessName, detail: "" },
+      to: {
+        label: "Bill to",
+        name: customer?.name ?? "",
+        detail: customer ? `${customer.company ?? ""}\n${customer.email ?? ""}` : "",
+      },
+      items,
+      mode: "qty-rate",
+      subtotal,
+      taxPercent,
+      discountType,
+      discountValue,
+      totalLabel: "Total due",
+      notes,
+      templateId,
+    });
+  };
+
   const canSave =
     saveState === "idle" || saveState === "error"
-      ? Boolean(customer && issueDate && dueDate && items.every((it) => it.description.trim()))
+      ? Boolean(
+          customer &&
+            (isRecurring || (issueDate && dueDate)) &&
+            items.every((it) => it.description.trim())
+        )
       : false;
 
   return (
@@ -155,7 +219,46 @@ export default function CreateInvoicePage() {
             <TemplatePicker value={templateId} onChange={setTemplateId} />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
+          <div className="mb-5 bg-bg border border-border rounded-md px-4 py-3">
+            <label className="flex items-center gap-2.5 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={isRecurring}
+                onChange={(e) => setIsRecurring(e.target.checked)}
+                className="w-4 h-4 accent-orange"
+              />
+              <span className="flex items-center gap-1.5 text-sm text-ink">
+                <IconRepeat size={15} className="text-orange" />
+                Make this a recurring invoice
+              </span>
+            </label>
+            {isRecurring && (
+              <div className="mt-3 pl-6">
+                <label className={labelClass}>Repeats</label>
+                <select
+                  value={interval}
+                  onChange={(e) => setInterval(e.target.value as RecurringInterval)}
+                  className={inputClass}
+                >
+                  {RECURRING_INTERVALS.map((i) => (
+                    <option key={i} value={i}>
+                      {INTERVAL_LABELS[i]}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-muted mt-1.5">
+                  Bills {customer?.name || "this customer"} every {INTERVAL_LABELS[interval].toLowerCase()},
+                  starting today. Manage or pause it later from{" "}
+                  <a href="/invoices/recurring" className="text-navy dark:text-[#8FA9E8] hover:underline">
+                    Recurring invoices
+                  </a>
+                  .
+                </p>
+              </div>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
             <div>
               <label className={labelClass}>Tax (%)</label>
               <input
@@ -163,6 +266,30 @@ export default function CreateInvoicePage() {
                 min={0}
                 value={taxPercent}
                 onChange={(e) => setTaxPercent(Number(e.target.value) || 0)}
+                className={inputClass}
+              />
+            </div>
+            <div>
+              <label className={labelClass}>Discount type</label>
+              <select
+                value={discountType}
+                onChange={(e) => setDiscountType(e.target.value as DiscountType)}
+                className={inputClass}
+              >
+                <option value="percent">Percent (%)</option>
+                <option value="fixed">Fixed (Rs.)</option>
+              </select>
+            </div>
+            <div>
+              <label className={labelClass}>
+                Discount {discountType === "percent" ? "(%)" : "(Rs.)"}
+              </label>
+              <input
+                type="number"
+                min={0}
+                max={discountType === "percent" ? 100 : undefined}
+                value={discountValue}
+                onChange={(e) => setDiscountValue(Number(e.target.value) || 0)}
                 className={inputClass}
               />
             </div>
@@ -193,16 +320,17 @@ export default function CreateInvoicePage() {
             >
               {saveState === "saving" && <IconLoader2 size={16} className="animate-spin" />}
               {saveState === "saved" && <IconCheck size={16} />}
-              {(saveState === "idle" || saveState === "error") && "Save invoice"}
+              {(saveState === "idle" || saveState === "error") &&
+                (isRecurring ? "Save recurring invoice" : "Save invoice")}
               {saveState === "saving" && "Saving..."}
               {saveState === "saved" && "Saved — redirecting"}
             </button>
             <button
-              onClick={() => window.print()}
+              onClick={handleDownloadPdf}
               className="flex-1 flex items-center justify-center gap-2 bg-navy text-white rounded-md py-2.5 text-sm hover:bg-navyLight transition-colors"
             >
-              <IconPrinter size={16} />
-              Print / Save as PDF
+              <IconDownload size={16} />
+              Download PDF
             </button>
           </div>
           {!customer && (
@@ -219,7 +347,7 @@ export default function CreateInvoicePage() {
                 { label: "Issued", value: issueDate },
                 { label: "Due", value: dueDate },
               ]}
-              from={{ label: "From", name: "Your business", detail: "" }}
+              from={{ label: "From", name: businessName, detail: "" }}
               to={{
                 label: "Bill to",
                 name: customer?.name ?? "",
@@ -229,6 +357,8 @@ export default function CreateInvoicePage() {
               mode="qty-rate"
               subtotal={subtotal}
               taxPercent={taxPercent}
+              discountType={discountType}
+              discountValue={discountValue}
               totalLabel="Total due"
               notes={notes}
               templateId={templateId}

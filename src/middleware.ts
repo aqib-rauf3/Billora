@@ -8,7 +8,16 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 
-const PROTECTED_PATHS = ["/dashboard", "/invoices", "/estimates", "/expenses", "/customers"];
+const PROTECTED_PATHS = [
+  "/dashboard",
+  "/invoices",
+  "/estimates",
+  "/expenses",
+  "/customers",
+  "/products",
+  "/payments",
+  "/reports",
+];
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
@@ -41,5 +50,8 @@ export const config = {
     "/estimates/:path*",
     "/expenses/:path*",
     "/customers/:path*",
+    "/products/:path*",
+    "/payments/:path*",
+    "/reports/:path*",
   ],
 };

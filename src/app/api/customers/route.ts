@@ -15,6 +15,8 @@ const customerSchema = z.object({
     .optional()
     .or(z.literal("")),
   company: z.string().trim().optional(),
+  notes: z.string().trim().optional(),
+  tags: z.array(z.string().trim().min(1)).optional(),
 });
 
 export async function GET() {
@@ -53,6 +55,8 @@ export async function POST(req: NextRequest) {
       name: parsed.data.name,
       email: parsed.data.email || null,
       company: parsed.data.company || null,
+      notes: parsed.data.notes || null,
+      tags: parsed.data.tags ?? [],
       userId,
     },
   });

@@ -8,6 +8,8 @@ export interface LiveCustomer {
   name: string;
   email: string | null;
   company: string | null;
+  notes: string | null;
+  tags: string[];
   createdAt: string;
 }
 
@@ -29,10 +31,17 @@ export interface LiveInvoice {
   issueDate: string;
   dueDate: string;
   taxPercent: number;
+  discountType: "percent" | "fixed";
+  discountValue: number;
   note: string | null;
   items: LiveInvoiceItem[];
   total: number;
   createdAt: string;
+  // Only present on the /api/invoices/[id] detail response, not the list.
+  payments?: LivePayment[];
+  paid?: number;
+  balance?: number;
+  shareToken?: string | null;
 }
 
 export type EstimateStatus = "pending" | "approved" | "rejected";
@@ -53,6 +62,39 @@ export interface LiveExpense {
   category: string;
   amount: number;
   note: string | null;
+  createdAt: string;
+}
+
+export interface LiveProduct {
+  id: string;
+  name: string;
+  description: string | null;
+  price: number;
+  unit: string | null;
+  createdAt: string;
+}
+
+export type PaymentMethod = "bank_transfer" | "cash" | "card" | "other";
+
+export interface LivePayment {
+  id: string;
+  amount: number;
+  method: PaymentMethod;
+  note: string | null;
+  paidAt: string;
+  invoiceId: string;
+  invoice?: { id: string; number: string; customer: { name: string } };
+  createdAt: string;
+}
+
+export type NotificationType = "welcome" | "payment_received" | "invoice_overdue";
+
+export interface LiveNotification {
+  id: string;
+  type: NotificationType;
+  message: string;
+  link: string | null;
+  read: boolean;
   createdAt: string;
 }
 

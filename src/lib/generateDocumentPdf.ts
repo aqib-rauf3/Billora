@@ -23,6 +23,8 @@ export interface DocumentPdfInput {
   mode: "qty-rate" | "amount-only";
   subtotal: number;
   taxPercent?: number;
+  discountType?: "percent" | "fixed";
+  discountValue?: number;
   totalLabel: string;
   notes?: string;
   extraLine?: { label: string; value: string };
@@ -60,6 +62,8 @@ export function generateDocumentPdf(input: DocumentPdfInput) {
     mode,
     subtotal,
     taxPercent = 0,
+    discountType = "percent",
+    discountValue = 0,
     totalLabel,
     notes,
     extraLine,
@@ -243,8 +247,11 @@ export function generateDocumentPdf(input: DocumentPdfInput) {
   y += 22;
 
   // Totals block, right-aligned
-  const taxAmount = subtotal * (taxPercent / 100);
-  const total = subtotal + taxAmount;
+  const rawDiscount = discountType === "percent" ? subtotal * (discountValue / 100) : discountValue;
+  const discountAmount = Math.min(Math.max(rawDiscount, 0), subtotal);
+  const discountedSubtotal = subtotal - discountAmount;
+  const taxAmount = discountedSubtotal * (taxPercent / 100);
+  const total = discountedSubtotal + taxAmount;
   const labelX = pageWidth - margin - 150;
 
   const totalsRow = (label: string, value: string, bold = false) => {
@@ -257,8 +264,16 @@ export function generateDocumentPdf(input: DocumentPdfInput) {
     y += bold ? 20 : 15;
   };
 
-  if (taxPercent > 0) {
+  if (taxPercent > 0 || discountAmount > 0) {
     totalsRow("Subtotal", money(subtotal));
+  }
+  if (discountAmount > 0) {
+    totalsRow(
+      `Discount${discountType === "percent" ? ` (${discountValue}%)` : ""}`,
+      `-${money(discountAmount)}`
+    );
+  }
+  if (taxPercent > 0) {
     totalsRow(`Tax (${taxPercent}%)`, money(taxAmount));
   }
   if (extraLine) totalsRow(extraLine.label, extraLine.value);

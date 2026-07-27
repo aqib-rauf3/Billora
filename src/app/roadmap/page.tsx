@@ -5,9 +5,9 @@ import Footer from "@/components/layout/Footer";
 // Condensed from docs/ROADMAP.md — same phases, same status, just laid out
 // as a page instead of a markdown file so it's linkable from the footer.
 const PHASES = [
-  { phase: "Phase 1 — Foundation", status: "active", items: ["Public marketing site", "Free tools", "Login/Signup UI"] },
-  { phase: "Phase 2 — Dashboard", status: "active", items: ["Dashboard, Invoices, Customers, Estimates, Expenses (UI built, running on sample data)"] },
-  { phase: "Phase 3 — Invoicing System", status: "planned", items: ["Real PDF export", "Recurring invoices", "Payment tracking"] },
+  { phase: "Phase 1 — Foundation", status: "done", items: ["Public marketing site", "Free tools", "Login/Signup UI"] },
+  { phase: "Phase 2 — Dashboard", status: "done", items: ["Dashboard, Invoices, Customers, Estimates, Expenses, Products, Payments, Reports, Notifications — all live on the database"] },
+  { phase: "Phase 3 — Invoicing System", status: "active", items: ["Templates, tax, discounts, branded PDF export, payment tracking — done", "Recurring invoices, shareable invoice links — in progress"] },
   { phase: "Phase 4–7 — Customers, Products, Payments, Reports", status: "planned", items: ["Live database", "Online payments", "Financial reports"] },
   { phase: "Phase 8–9 — AI & Automation", status: "planned", items: ["AI invoice generation", "Reminder automation"] },
   { phase: "Phase 10+ — Integrations, Teams, Admin", status: "planned", items: ["Stripe, QuickBooks, Zapier", "Team roles & permissions"] },

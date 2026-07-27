@@ -22,6 +22,8 @@ interface DocumentPreviewCardProps {
   mode: "qty-rate" | "amount-only";
   subtotal: number;
   taxPercent?: number;
+  discountType?: "percent" | "fixed";
+  discountValue?: number;
   totalLabel: string;
   notes?: string;
   extraLine?: { label: string; value: string };
@@ -52,13 +54,18 @@ export default function DocumentPreviewCard({
   mode,
   subtotal,
   taxPercent = 0,
+  discountType = "percent",
+  discountValue = 0,
   totalLabel,
   notes,
   extraLine,
   templateId = DEFAULT_TEMPLATE_ID,
 }: DocumentPreviewCardProps) {
-  const taxAmount = subtotal * (taxPercent / 100);
-  const total = subtotal + taxAmount;
+  const rawDiscount = discountType === "percent" ? subtotal * (discountValue / 100) : discountValue;
+  const discountAmount = Math.min(Math.max(rawDiscount, 0), subtotal);
+  const discountedSubtotal = subtotal - discountAmount;
+  const taxAmount = discountedSubtotal * (taxPercent / 100);
+  const total = discountedSubtotal + taxAmount;
   const dense = templateId === "compact";
   // headerStyle is a separate enum from templateId (see invoiceTemplates.ts —
   // e.g. the "modern" template uses the "band" header treatment). Look it up
@@ -167,10 +174,18 @@ export default function DocumentPreviewCard({
         </div>
 
         <div className={`space-y-1.5 ${dense ? "mb-2" : "mb-4"}`}>
-          {taxPercent > 0 && (
+          {(taxPercent > 0 || discountAmount > 0) && (
             <div className="flex justify-between text-xs text-text">
               <span>Subtotal</span>
               <span className="font-mono">{money(subtotal)}</span>
+            </div>
+          )}
+          {discountAmount > 0 && (
+            <div className="flex justify-between text-xs text-text">
+              <span>
+                Discount {discountType === "percent" ? `(${discountValue}%)` : ""}
+              </span>
+              <span className="font-mono">-{money(discountAmount)}</span>
             </div>
           )}
           {taxPercent > 0 && (

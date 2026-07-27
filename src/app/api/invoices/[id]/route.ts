@@ -25,12 +25,17 @@ const updateSchema = z.object({
   issueDate: z.coerce.date().optional(),
   dueDate: z.coerce.date().optional(),
   taxPercent: z.number().min(0).max(100).optional(),
+  discountType: z.enum(["percent", "fixed"]).optional(),
+  discountValue: z.number().min(0).optional(),
   note: z.string().trim().optional(),
   // Sending `items` replaces the full line-item set (delete + recreate in
   // one transaction below) — simplest correct behavior for a small
   // invoice, avoids diffing individual rows.
   items: z.array(invoiceItemSchema).min(1).optional(),
-});
+}).refine(
+  (data) => data.discountType !== "percent" || (data.discountValue ?? 0) <= 100,
+  { message: "Percentage discount can't exceed 100%.", path: ["discountValue"] }
+);
 
 async function findOwnedInvoice(id: string, userId: string) {
   return prisma.invoice.findFirst({ where: { id, userId }, include: { items: true } });
@@ -43,12 +48,20 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
 
   const invoice = await prisma.invoice.findFirst({
     where: { id, userId },
-    include: { items: true, customer: true },
+    include: { items: true, customer: true, payments: { orderBy: { paidAt: "desc" } } },
   });
   if (!invoice) return NextResponse.json({ error: "Invoice not found." }, { status: 404 });
 
+  const paid = invoice.payments.reduce((sum: number, p: { amount: number }) => sum + p.amount, 0);
+  const total = computeInvoiceTotal(
+    invoice.items,
+    invoice.taxPercent,
+    invoice.discountType as "percent" | "fixed",
+    invoice.discountValue
+  );
+
   return NextResponse.json({
-    invoice: { ...invoice, total: computeInvoiceTotal(invoice.items, invoice.taxPercent) },
+    invoice: { ...invoice, total, paid, balance: Math.max(0, total - paid) },
   });
 }
 
@@ -98,6 +111,8 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
         ...(data.issueDate !== undefined && { issueDate: data.issueDate }),
         ...(data.dueDate !== undefined && { dueDate: data.dueDate }),
         ...(data.taxPercent !== undefined && { taxPercent: data.taxPercent }),
+        ...(data.discountType !== undefined && { discountType: data.discountType }),
+        ...(data.discountValue !== undefined && { discountValue: data.discountValue }),
         ...(data.note !== undefined && { note: data.note }),
         ...(data.customerId !== undefined && { customerId: data.customerId }),
         ...(data.items && {
@@ -115,7 +130,15 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
   });
 
   return NextResponse.json({
-    invoice: { ...invoice, total: computeInvoiceTotal(invoice.items, invoice.taxPercent) },
+    invoice: {
+      ...invoice,
+      total: computeInvoiceTotal(
+        invoice.items,
+        invoice.taxPercent,
+        invoice.discountType as "percent" | "fixed",
+        invoice.discountValue
+      ),
+    },
   });
 }
 
@@ -128,6 +151,7 @@ export async function DELETE(_req: NextRequest, { params }: RouteContext) {
   if (!existing) return NextResponse.json({ error: "Invoice not found." }, { status: 404 });
 
   await prisma.$transaction([
+    prisma.payment.deleteMany({ where: { invoiceId: id } }),
     prisma.invoiceItem.deleteMany({ where: { invoiceId: id } }),
     prisma.invoice.delete({ where: { id } }),
   ]);

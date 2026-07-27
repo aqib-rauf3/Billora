@@ -40,6 +40,16 @@ Documentation
 
 # Upcoming
 
+## Added
+
+- Invoice discounts — percent or fixed amount, applied to the subtotal
+  before tax. New `discountType`/`discountValue` fields on Invoice.
+- Real branded PDF export on the dashboard's Invoices > Create and
+  Invoice Detail pages (reuses the jsPDF engine already built for the
+  free tools) — replaces the old browser print-dialog button.
+- Invoice PDFs and previews now pull the signed-in user's business name
+  from Account Settings instead of a hardcoded placeholder.
+
 ## Merged
 
 - Combined two divergent working branches into one:

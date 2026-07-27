@@ -19,6 +19,8 @@ const updateSchema = z.object({
     .optional()
     .or(z.literal("")),
   company: z.string().trim().optional(),
+  notes: z.string().trim().optional(),
+  tags: z.array(z.string().trim().min(1)).optional(),
 });
 
 async function findOwnedCustomer(id: string, userId: string) {
@@ -65,6 +67,8 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       ...(parsed.data.name !== undefined && { name: parsed.data.name }),
       ...(parsed.data.email !== undefined && { email: parsed.data.email || null }),
       ...(parsed.data.company !== undefined && { company: parsed.data.company || null }),
+      ...(parsed.data.notes !== undefined && { notes: parsed.data.notes || null }),
+      ...(parsed.data.tags !== undefined && { tags: parsed.data.tags }),
     },
   });
 
@@ -79,6 +83,16 @@ export async function DELETE(_req: NextRequest, { params }: RouteContext) {
   const existing = await findOwnedCustomer(id, userId);
   if (!existing) return NextResponse.json({ error: "Customer not found." }, { status: 404 });
 
-  await prisma.customer.delete({ where: { id } });
+  try {
+    await prisma.customer.delete({ where: { id } });
+  } catch {
+    // Prisma throws on the FK constraint if this customer still has
+    // invoices/estimates pointing at them — friendlier than a raw 500.
+    return NextResponse.json(
+      { error: "This customer has invoices or estimates on file — delete or reassign those first." },
+      { status: 409 }
+    );
+  }
+
   return NextResponse.json({ success: true });
 }

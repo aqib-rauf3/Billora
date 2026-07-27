@@ -20,9 +20,14 @@ const invoiceSchema = z.object({
   issueDate: z.coerce.date(),
   dueDate: z.coerce.date(),
   taxPercent: z.number().min(0).max(100).default(0),
+  discountType: z.enum(["percent", "fixed"]).default("percent"),
+  discountValue: z.number().min(0).default(0),
   note: z.string().trim().optional(),
   items: z.array(invoiceItemSchema).min(1, "Add at least one line item."),
-});
+}).refine(
+  (data) => data.discountType !== "percent" || data.discountValue <= 100,
+  { message: "Percentage discount can't exceed 100%.", path: ["discountValue"] }
+);
 
 async function nextInvoiceNumber(userId: string) {
   const count = await prisma.invoice.count({ where: { userId } });
@@ -39,11 +44,21 @@ export async function GET() {
     orderBy: { createdAt: "desc" },
   });
 
-  type InvoiceWithRelations = { items: { qty: number; rate: number }[]; taxPercent: number };
+  type InvoiceWithRelations = {
+    items: { qty: number; rate: number }[];
+    taxPercent: number;
+    discountType: string;
+    discountValue: number;
+  };
 
   const withTotals = invoices.map((invoice: InvoiceWithRelations) => ({
     ...invoice,
-    total: computeInvoiceTotal(invoice.items, invoice.taxPercent),
+    total: computeInvoiceTotal(
+      invoice.items,
+      invoice.taxPercent,
+      invoice.discountType as "percent" | "fixed",
+      invoice.discountValue
+    ),
   }));
 
   return NextResponse.json({ invoices: withTotals });
@@ -87,6 +102,8 @@ export async function POST(req: NextRequest) {
       issueDate: data.issueDate,
       dueDate: data.dueDate,
       taxPercent: data.taxPercent,
+      discountType: data.discountType,
+      discountValue: data.discountValue,
       note: data.note,
       customerId: data.customerId,
       userId,
@@ -102,7 +119,17 @@ export async function POST(req: NextRequest) {
   });
 
   return NextResponse.json(
-    { invoice: { ...invoice, total: computeInvoiceTotal(invoice.items, invoice.taxPercent) } },
+    {
+      invoice: {
+        ...invoice,
+        total: computeInvoiceTotal(
+          invoice.items,
+          invoice.taxPercent,
+          invoice.discountType as "percent" | "fixed",
+          invoice.discountValue
+        ),
+      },
+    },
     { status: 201 }
   );
 }

@@ -68,6 +68,15 @@ export async function POST(req: NextRequest) {
     actionUrl: appUrl(`/verify-email?token=${verificationToken}`),
   });
 
+  await prisma.notification.create({
+    data: {
+      userId: user.id,
+      type: "welcome",
+      message: `Welcome to Billora, ${user.name.split(" ")[0]}! Verify your email to get started.`,
+      link: "/dashboard",
+    },
+  });
+
   // Password never leaves this route. The client signs the user in
   // separately via next-auth's signIn("credentials", ...) right after this
   // succeeds — see src/app/(auth)/login/page.tsx. The account exists but

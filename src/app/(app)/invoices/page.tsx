@@ -6,7 +6,8 @@
 // (Prisma) instead of src/lib/mockData.ts.
 
 import { useMemo, useState } from "react";
-import { IconSearch, IconFileInvoice } from "@tabler/icons-react";
+import Link from "next/link";
+import { IconSearch, IconFileInvoice, IconRepeat } from "@tabler/icons-react";
 import StatusBadge from "@/components/dashboard/StatusBadge";
 import EmptyState from "@/components/dashboard/EmptyState";
 import ErrorState from "@/components/dashboard/ErrorState";
@@ -42,12 +43,21 @@ export default function InvoiceHistoryPage() {
     <div>
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <h1 className="text-2xl font-medium text-ink">Invoices</h1>
-        <a
-          href="/invoices/create"
-          className="bg-orange text-white rounded-md px-4 py-2.5 text-sm hover:opacity-90 transition-opacity"
-        >
-          New invoice
-        </a>
+        <div className="flex items-center gap-2.5">
+          <a
+            href="/invoices/recurring"
+            className="flex items-center gap-1.5 border border-border text-ink rounded-md px-4 py-2.5 text-sm hover:bg-bg transition-colors"
+          >
+            <IconRepeat size={15} />
+            Recurring
+          </a>
+          <a
+            href="/invoices/create"
+            className="bg-orange text-white rounded-md px-4 py-2.5 text-sm hover:opacity-90 transition-opacity"
+          >
+            New invoice
+          </a>
+        </div>
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
@@ -103,8 +113,9 @@ export default function InvoiceHistoryPage() {
               <span className="w-20 text-right">Status</span>
             </div>
             {filtered.map((inv) => (
-              <div
+              <Link
                 key={inv.id}
+                href={`/invoices/${inv.id}`}
                 className="grid grid-cols-2 md:grid-cols-[2fr_1fr_1fr_1fr_auto] gap-x-4 gap-y-1 px-5 py-3.5 border-b border-border last:border-0 hover:bg-bg/60 transition-colors"
               >
                 <p className="text-sm text-ink col-span-2 md:col-span-1 truncate">{inv.customer.name}</p>
@@ -114,7 +125,7 @@ export default function InvoiceHistoryPage() {
                 <div className="md:w-20 flex md:justify-end">
                   <StatusBadge status={inv.status} />
                 </div>
-              </div>
+              </Link>
             ))}
           </>
         )}
