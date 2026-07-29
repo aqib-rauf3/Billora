@@ -87,14 +87,15 @@ export default function Navbar() {
   };
 
   return (
-    <nav
-      ref={navRef}
-      className={`sticky top-0 z-50 flex items-center justify-between px-7 py-4 border-b transition-all duration-300 ${
-        scrolled
-          ? "bg-surface/95 backdrop-blur-xl border-border shadow-[0_4px_24px_-8px_rgba(11,37,69,0.15)]"
-          : "bg-surface/70 backdrop-blur-sm border-transparent shadow-none"
-      }`}
-    >
+    <div className="sticky top-0 z-50 w-full px-3 sm:px-5 pt-3">
+      <nav
+        ref={navRef}
+        className={`relative mx-auto max-w-5xl flex items-center justify-between gap-4 rounded-full border pl-5 pr-2.5 py-2.5 transition-all duration-300 ${
+          scrolled
+            ? "bg-surface/60 backdrop-blur-xl border-white/20 shadow-[0_8px_30px_-8px_rgba(11,37,69,0.25)]"
+            : "bg-surface/35 backdrop-blur-lg border-white/15 shadow-[0_4px_20px_-6px_rgba(11,37,69,0.12)]"
+        }`}
+      >
       <a
         href={isHome ? "#hero" : "/"}
         onClick={(e) => handleClick(e, "#hero")}
@@ -146,7 +147,7 @@ export default function Navbar() {
 
         <a
           href="/login"
-          className="relative overflow-hidden group/cta bg-navy text-white text-sm rounded-md px-4 py-2 hover:bg-navyLight hover:shadow-md hover:-translate-y-px transition-all duration-200"
+          className="relative overflow-hidden group/cta bg-navy text-white text-sm rounded-full px-5 py-2.5 hover:bg-navyLight hover:shadow-md hover:-translate-y-px transition-all duration-200"
         >
           <span className="relative z-10">Try it free</span>
           <span
@@ -158,7 +159,7 @@ export default function Navbar() {
 
       {/* Mobile toggle */}
       <button
-        className="md:hidden text-ink p-2.5 -mr-2.5"
+        className="md:hidden text-ink p-2.5 -mr-1 rounded-full hover:bg-bg transition-colors"
         onClick={() => setOpen(!open)}
         aria-label="Toggle menu"
         aria-expanded={open}
@@ -175,7 +176,7 @@ export default function Navbar() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
-            className="absolute top-full left-0 right-0 bg-surface border-b border-border md:hidden flex flex-col p-4 gap-1 max-h-[calc(100vh-64px)] overflow-y-auto"
+            className="absolute top-full left-0 right-0 mt-2 bg-surface border border-border rounded-3xl shadow-lg md:hidden flex flex-col p-4 gap-1 max-h-[calc(100vh-96px)] overflow-y-auto"
           >
             <MobileGroup
               label="Features"
@@ -221,7 +222,7 @@ export default function Navbar() {
 
             <a
               href="/login"
-              className="bg-navy text-white text-sm rounded-md px-4 py-2 text-center mt-2"
+              className="bg-navy text-white text-sm rounded-full px-4 py-2.5 text-center mt-2"
               onClick={() => setOpen(false)}
             >
               Try it free
@@ -229,7 +230,8 @@ export default function Navbar() {
           </motion.div>
         )}
       </AnimatePresence>
-    </nav>
+      </nav>
+    </div>
   );
 }
 
