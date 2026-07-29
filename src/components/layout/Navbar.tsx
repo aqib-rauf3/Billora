@@ -92,8 +92,8 @@ export default function Navbar() {
         ref={navRef}
         className={`relative mx-auto max-w-5xl flex items-center justify-between gap-4 rounded-full border pl-5 pr-2.5 py-2.5 transition-all duration-300 ${
           scrolled
-            ? "bg-surface/60 backdrop-blur-xl border-white/20 shadow-[0_8px_30px_-8px_rgba(11,37,69,0.25)]"
-            : "bg-surface/35 backdrop-blur-lg border-white/15 shadow-[0_4px_20px_-6px_rgba(11,37,69,0.12)]"
+            ? "bg-surface/45 backdrop-blur-md border-white/20 shadow-[0_8px_30px_-8px_rgba(11,37,69,0.25)]"
+            : "bg-surface/20 backdrop-blur-sm border-white/15 shadow-[0_4px_20px_-6px_rgba(11,37,69,0.12)]"
         }`}
       >
       <a
